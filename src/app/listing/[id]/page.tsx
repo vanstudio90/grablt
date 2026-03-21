@@ -22,6 +22,8 @@ import {
   Bookmark,
   MoreHorizontal,
   ShoppingCart,
+  Truck,
+  Package,
 } from "lucide-react";
 import { listings, getListingsBySeller } from "@/lib/data";
 import ListingCard from "@/components/ListingCard";
@@ -37,6 +39,7 @@ export default function ListingDetail() {
   const [depositPlaced, setDepositPlaced] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping">("pickup");
 
   if (!listing) {
     return (
@@ -149,6 +152,22 @@ export default function ListingDetail() {
                 </div>
               </div>
 
+              {/* Delivery Options */}
+              <div className="border-t border-border mt-5 pt-5">
+                <h2 className="font-semibold text-text-primary mb-3">Delivery Options</h2>
+                <div className="flex gap-3">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-accent/10 text-accent rounded-lg text-sm font-medium">
+                    <MapPin className="w-4 h-4" /> Local Pickup
+                  </div>
+                  {listing.shippingAvailable && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-secondary/10 text-secondary rounded-lg text-sm font-medium">
+                      <Truck className="w-4 h-4" /> Shipping Available
+                      {listing.shippingPrice > 0 && <span className="text-xs opacity-70">(+${listing.shippingPrice})</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Description */}
               <div className="border-t border-border mt-5 pt-5">
                 <h2 className="font-semibold text-text-primary mb-2">Description</h2>
@@ -187,6 +206,37 @@ export default function ListingDetail() {
                   Reserve this item with a <strong>${listing.depositAmount}</strong> deposit.
                   Your deposit is refunded when you pay cash at meetup, or goes toward the full price if paying by card.
                 </p>
+              </div>
+            )}
+
+            {/* Delivery Method Chooser */}
+            {listing.shippingAvailable && !depositPlaced && (
+              <div className="bg-surface rounded-2xl border border-border p-5">
+                <h3 className="font-semibold text-text-primary mb-3">How do you want to get it?</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setDeliveryMethod("pickup")}
+                    className={`p-4 border rounded-xl text-center transition ${
+                      deliveryMethod === "pickup" ? "border-primary bg-primary-light" : "border-border hover:border-primary/30"
+                    }`}
+                  >
+                    <MapPin className={`w-6 h-6 mx-auto mb-2 ${deliveryMethod === "pickup" ? "text-primary" : "text-text-tertiary"}`} />
+                    <p className="font-medium text-sm">Local Pickup</p>
+                    <p className="text-xs text-text-tertiary mt-1">Meet the seller nearby</p>
+                    <p className="text-xs font-semibold text-accent mt-1">Free</p>
+                  </button>
+                  <button
+                    onClick={() => setDeliveryMethod("shipping")}
+                    className={`p-4 border rounded-xl text-center transition ${
+                      deliveryMethod === "shipping" ? "border-primary bg-primary-light" : "border-border hover:border-primary/30"
+                    }`}
+                  >
+                    <Truck className={`w-6 h-6 mx-auto mb-2 ${deliveryMethod === "shipping" ? "text-primary" : "text-text-tertiary"}`} />
+                    <p className="font-medium text-sm">Ship to Me</p>
+                    <p className="text-xs text-text-tertiary mt-1">Delivered to your door</p>
+                    <p className="text-xs font-semibold text-primary mt-1">+${listing.shippingPrice}</p>
+                  </button>
+                </div>
               </div>
             )}
 
@@ -293,23 +343,66 @@ export default function ListingDetail() {
                   <p className="text-lg font-bold text-primary">${listing.price.toLocaleString()}</p>
                 </div>
               </div>
-              <h3 className="font-semibold text-sm mb-3">How do you want to pay at meetup?</h3>
-              <div className="space-y-2 mb-5">
-                <button onClick={() => setPaymentMethod("deposit")} className={`w-full p-4 border rounded-xl text-left transition ${paymentMethod === "deposit" ? "border-primary bg-primary-light" : "border-border hover:border-primary/30"}`}>
-                  <div className="flex items-center gap-3">
-                    <Banknote className={`w-5 h-5 ${paymentMethod === "deposit" ? "text-primary" : "text-text-tertiary"}`} />
+              {/* Delivery method in modal */}
+              <div className="flex items-center gap-2 p-3 bg-surface-secondary rounded-xl mb-5">
+                {deliveryMethod === "pickup" ? (
+                  <>
+                    <MapPin className="w-5 h-5 text-accent" />
                     <div>
-                      <p className="font-medium text-sm">Pay Cash at Meetup</p>
-                      <p className="text-xs text-text-secondary mt-0.5">${listing.depositAmount} deposit now · ${listing.price - listing.depositAmount} cash at meetup · Deposit refunded</p>
+                      <p className="font-medium text-sm">Local Pickup</p>
+                      <p className="text-xs text-text-tertiary">You&apos;ll meet the seller to pick up the item</p>
                     </div>
+                  </>
+                ) : (
+                  <>
+                    <Truck className="w-5 h-5 text-secondary" />
+                    <div>
+                      <p className="font-medium text-sm">Shipping (+${listing.shippingPrice})</p>
+                      <p className="text-xs text-text-tertiary">Seller will ship the item to your address</p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Shipping address */}
+              {deliveryMethod === "shipping" && (
+                <div className="space-y-3 mb-5">
+                  <h3 className="font-semibold text-sm">Shipping Address</h3>
+                  <input type="text" placeholder="Full name" className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  <input type="text" placeholder="Street address" className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  <input type="text" placeholder="Apt, suite, unit (optional)" className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  <div className="grid grid-cols-3 gap-3">
+                    <input type="text" placeholder="City" className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    <input type="text" placeholder="State" className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    <input type="text" placeholder="ZIP" className="w-full px-3 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                   </div>
-                </button>
-                <button onClick={() => setPaymentMethod("full")} className={`w-full p-4 border rounded-xl text-left transition ${paymentMethod === "full" ? "border-primary bg-primary-light" : "border-border hover:border-primary/30"}`}>
+                </div>
+              )}
+
+              <h3 className="font-semibold text-sm mb-3">{deliveryMethod === "pickup" ? "How do you want to pay at meetup?" : "Payment method"}</h3>
+              <div className="space-y-2 mb-5">
+                {deliveryMethod === "pickup" && (
+                  <button onClick={() => setPaymentMethod("deposit")} className={`w-full p-4 border rounded-xl text-left transition ${paymentMethod === "deposit" ? "border-primary bg-primary-light" : "border-border hover:border-primary/30"}`}>
+                    <div className="flex items-center gap-3">
+                      <Banknote className={`w-5 h-5 ${paymentMethod === "deposit" ? "text-primary" : "text-text-tertiary"}`} />
+                      <div>
+                        <p className="font-medium text-sm">Pay Cash at Meetup</p>
+                        <p className="text-xs text-text-secondary mt-0.5">${listing.depositAmount} deposit now · ${listing.price - listing.depositAmount} cash at meetup · Deposit refunded</p>
+                      </div>
+                    </div>
+                  </button>
+                )}
+                <button onClick={() => setPaymentMethod("full")} className={`w-full p-4 border rounded-xl text-left transition ${paymentMethod === "full" || deliveryMethod === "shipping" ? "border-primary bg-primary-light" : "border-border hover:border-primary/30"}`}>
                   <div className="flex items-center gap-3">
-                    <CreditCard className={`w-5 h-5 ${paymentMethod === "full" ? "text-primary" : "text-text-tertiary"}`} />
+                    <CreditCard className={`w-5 h-5 ${paymentMethod === "full" || deliveryMethod === "shipping" ? "text-primary" : "text-text-tertiary"}`} />
                     <div>
                       <p className="font-medium text-sm">Pay Full Price by Card</p>
-                      <p className="text-xs text-text-secondary mt-0.5">${listing.depositAmount} deposit now · ${listing.price - listing.depositAmount} charged at meetup · Fully protected</p>
+                      <p className="text-xs text-text-secondary mt-0.5">
+                        {deliveryMethod === "shipping"
+                          ? `$${listing.depositAmount + listing.shippingPrice} now · $${listing.price - listing.depositAmount} charged after delivery · Fully protected`
+                          : `$${listing.depositAmount} deposit now · $${listing.price - listing.depositAmount} charged at meetup · Fully protected`
+                        }
+                      </p>
                     </div>
                   </div>
                 </button>
@@ -332,8 +425,14 @@ export default function ListingDetail() {
               </div>
               <div className="bg-surface-secondary rounded-xl p-4 mb-5 space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-text-secondary">Deposit</span><span className="font-medium">${listing.depositAmount}</span></div>
+                {deliveryMethod === "shipping" && (
+                  <div className="flex justify-between"><span className="text-text-secondary">Shipping</span><span className="font-medium">${listing.shippingPrice}</span></div>
+                )}
                 <div className="flex justify-between"><span className="text-text-secondary">Service fee</span><span className="font-medium">$0.00</span></div>
-                <div className="flex justify-between border-t border-border pt-2"><span className="font-semibold">Charged now</span><span className="font-bold text-primary">${listing.depositAmount}</span></div>
+                <div className="flex justify-between border-t border-border pt-2">
+                  <span className="font-semibold">Charged now</span>
+                  <span className="font-bold text-primary">${listing.depositAmount + (deliveryMethod === "shipping" ? listing.shippingPrice : 0)}</span>
+                </div>
               </div>
               <button onClick={() => { setDepositPlaced(true); setShowDepositModal(false); }} className="w-full py-3.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition flex items-center justify-center gap-2">
                 <ShieldCheck className="w-5 h-5" /> Place ${listing.depositAmount} Deposit

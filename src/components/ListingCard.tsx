@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Heart, MapPin, Clock, ShieldCheck } from "lucide-react";
+import { Heart, MapPin, Clock, ShieldCheck, Truck } from "lucide-react";
 import type { Listing } from "@/lib/data";
 
 export default function ListingCard({ listing }: { listing: Listing }) {
@@ -41,13 +41,21 @@ export default function ListingCard({ listing }: { listing: Listing }) {
               FREE
             </div>
           )}
-          {/* Deposit badge */}
-          {listing.depositAmount > 0 && (
-            <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2 py-1 bg-primary/90 backdrop-blur-sm text-white text-xs font-medium rounded-full">
-              <ShieldCheck className="w-3 h-3" />
-              Deposit protected
-            </div>
-          )}
+          {/* Bottom badges */}
+          <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
+            {listing.depositAmount > 0 && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-primary/90 backdrop-blur-sm text-white text-xs font-medium rounded-full">
+                <ShieldCheck className="w-3 h-3" />
+                Protected
+              </div>
+            )}
+            {listing.shippingAvailable && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-secondary/90 backdrop-blur-sm text-white text-xs font-medium rounded-full">
+                <Truck className="w-3 h-3" />
+                Ships
+              </div>
+            )}
+          </div>
         </div>
         {/* Info */}
         <div className="p-3.5">

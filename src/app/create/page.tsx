@@ -11,6 +11,8 @@ import {
   Info,
   ShieldCheck,
   X,
+  Truck,
+  Package,
 } from "lucide-react";
 import { sidebarCategories } from "@/lib/data";
 
@@ -21,6 +23,8 @@ export default function CreateListing() {
   const [category, setCategory] = useState("");
   const [condition, setCondition] = useState("");
   const [description, setDescription] = useState("");
+  const [offerShipping, setOfferShipping] = useState(false);
+  const [shippingPrice, setShippingPrice] = useState("");
   const [posted, setPosted] = useState(false);
 
   const depositAmount = price ? Math.max(5, Math.round(Number(price) * 0.1)) : 0;
@@ -191,6 +195,54 @@ export default function CreateListing() {
             <Info className="w-3 h-3" />
             Your exact address is never shown. Only the general area is visible.
           </p>
+        </div>
+
+        {/* Delivery Options */}
+        <div className="bg-surface rounded-2xl border border-border p-5">
+          <label className="font-semibold text-text-primary mb-3 block">Delivery Options</label>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-accent/5 border border-accent/20 rounded-xl">
+              <MapPin className="w-5 h-5 text-accent" />
+              <div className="flex-1">
+                <p className="font-medium text-sm">Local Pickup</p>
+                <p className="text-xs text-text-tertiary">Buyer meets you to pick up the item</p>
+              </div>
+              <span className="text-xs font-medium text-accent bg-accent/10 px-2 py-1 rounded-full">Always on</span>
+            </div>
+            <div className={`flex items-center gap-3 p-3 border rounded-xl transition ${offerShipping ? "border-secondary/30 bg-secondary/5" : "border-border"}`}>
+              <Truck className={`w-5 h-5 ${offerShipping ? "text-secondary" : "text-text-tertiary"}`} />
+              <div className="flex-1">
+                <p className="font-medium text-sm">Offer Shipping</p>
+                <p className="text-xs text-text-tertiary">Ship the item to the buyer&apos;s address</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={offerShipping}
+                  onChange={(e) => setOfferShipping(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-border rounded-full peer peer-checked:bg-secondary transition after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition peer-checked:after:translate-x-4"></div>
+              </label>
+            </div>
+            {offerShipping && (
+              <div className="pl-8">
+                <label className="text-xs font-medium text-text-secondary mb-1 block">Shipping Cost</label>
+                <div className="relative w-40">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+                  <input
+                    type="number"
+                    value={shippingPrice}
+                    onChange={(e) => setShippingPrice(e.target.value)}
+                    placeholder="15"
+                    min="0"
+                    className="w-full pl-8 pr-4 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+                <p className="text-xs text-text-tertiary mt-1">Set to $0 for free shipping</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Submit */}
