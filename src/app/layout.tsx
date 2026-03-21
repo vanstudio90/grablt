@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
-import Sidebar from "@/components/Sidebar";
+import LayoutShell from "@/components/LayoutShell";
 import PWAInstall from "@/components/PWAInstall";
 import { MessageProvider } from "@/lib/MessageContext";
 
@@ -34,10 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-surface-secondary">
         <MessageProvider>
           <Navbar />
-          <div className="flex">
-            <Sidebar />
-            <main className="flex-1 pb-20 md:pb-0 min-w-0">{children}</main>
-          </div>
+          <LayoutShell>{children}</LayoutShell>
           <BottomNav />
           <PWAInstall />
         </MessageProvider>

@@ -42,8 +42,8 @@ const menuItems = [
   { label: "Notifications", href: "#", icon: Bell },
   { label: "Inbox", href: "/messages", icon: Inbox },
   { label: "Marketplace access", href: "/profile", icon: Shield },
-  { label: "Buying", href: "/cart", icon: ShoppingBag, arrow: true },
-  { label: "Selling", href: "/create", icon: Tag, arrow: true },
+  { label: "Buying", href: "/buying", icon: ShoppingBag, arrow: true },
+  { label: "Selling", href: "/selling", icon: Tag, arrow: true },
 ];
 
 const categoryItems = [
