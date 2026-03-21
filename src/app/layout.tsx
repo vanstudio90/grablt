@@ -10,6 +10,16 @@ export const metadata: Metadata = {
   title: "GrabLt - Local Marketplace with Secure Meetups",
   description: "Buy and sell locally with deposit protection. Meet safely, trade confidently.",
   manifest: "/manifest.json",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
