@@ -268,7 +268,7 @@ export default function ListingDetail() {
       <MessageModal
         isOpen={showMessageModal}
         onClose={() => setShowMessageModal(false)}
-        recipient={{ name: listing.seller.name, avatar: listing.seller.avatar }}
+        recipient={{ id: listing.seller.id, name: listing.seller.name, avatar: listing.seller.avatar }}
         listingTitle={listing.title}
         listingImage={listing.images[0]}
         listingPrice={listing.price}

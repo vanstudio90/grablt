@@ -123,7 +123,7 @@ export default function SellerProfile() {
       <MessageModal
         isOpen={showMessageModal}
         onClose={() => setShowMessageModal(false)}
-        recipient={{ name: seller.name, avatar: seller.avatar }}
+        recipient={{ id: seller.id, name: seller.name, avatar: seller.avatar }}
       />
     </>
   );

@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { X, Send, CheckCircle2, MessageCircle } from "lucide-react";
-import Link from "next/link";
+import { useMessages } from "@/lib/MessageContext";
 
 interface MessageModalProps {
   isOpen: boolean;
   onClose: () => void;
   recipient: {
+    id: string;
     name: string;
     avatar: string;
   };
+  listingId?: string;
   listingTitle?: string;
   listingImage?: string;
   listingPrice?: number;
@@ -20,6 +23,7 @@ export default function MessageModal({
   isOpen,
   onClose,
   recipient,
+  listingId,
   listingTitle,
   listingImage,
   listingPrice,
@@ -28,11 +32,25 @@ export default function MessageModal({
     listingTitle ? `Hi, is the "${listingTitle}" still available?` : `Hi ${recipient.name}, I'd like to connect with you.`
   );
   const [sent, setSent] = useState(false);
+  const [convId, setConvId] = useState<string>("");
+  const { sendMessage } = useMessages();
+  const router = useRouter();
 
   if (!isOpen) return null;
 
   const handleSend = () => {
     if (!message.trim()) return;
+    const id = sendMessage({
+      recipientId: recipient.id,
+      recipientName: recipient.name,
+      recipientAvatar: recipient.avatar,
+      text: message,
+      listingId,
+      listingTitle,
+      listingImage,
+      listingPrice,
+    });
+    setConvId(id);
     setSent(true);
   };
 
@@ -44,11 +62,15 @@ export default function MessageModal({
     onClose();
   };
 
+  const goToMessages = () => {
+    handleClose();
+    router.push(`/messages/${convId}`);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4">
       <div className="bg-surface rounded-t-3xl md:rounded-2xl w-full max-w-md shadow-xl">
         {sent ? (
-          /* Success State */
           <div className="p-6 text-center">
             <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-7 h-7 text-accent" />
@@ -58,14 +80,13 @@ export default function MessageModal({
               Your message to {recipient.name} has been sent. You&apos;ll be notified when they reply.
             </p>
             <div className="flex gap-3">
-              <Link
-                href="/messages"
+              <button
+                onClick={goToMessages}
                 className="flex-1 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover transition flex items-center justify-center gap-2"
-                onClick={handleClose}
               >
                 <MessageCircle className="w-5 h-5" />
-                View Messages
-              </Link>
+                View Conversation
+              </button>
               <button
                 onClick={handleClose}
                 className="flex-1 py-3 border border-border rounded-xl font-medium hover:bg-surface-hover transition"
@@ -75,40 +96,25 @@ export default function MessageModal({
             </div>
           </div>
         ) : (
-          /* Compose State */
           <div className="p-6">
-            {/* Header */}
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-text-primary">Send Message</h2>
-              <button
-                onClick={handleClose}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-hover transition text-text-tertiary hover:text-text-primary"
-              >
+              <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-hover transition text-text-tertiary hover:text-text-primary">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Recipient */}
             <div className="flex items-center gap-3 mb-4">
-              <img
-                src={recipient.avatar}
-                alt={recipient.name}
-                className="w-10 h-10 rounded-full object-cover"
-              />
+              <img src={recipient.avatar} alt={recipient.name} className="w-10 h-10 rounded-full object-cover" />
               <div>
                 <p className="font-semibold text-sm text-text-primary">{recipient.name}</p>
                 <p className="text-xs text-text-tertiary">Usually responds quickly</p>
               </div>
             </div>
 
-            {/* Listing context (if applicable) */}
             {listingTitle && listingImage && (
               <div className="flex items-center gap-3 p-3 bg-surface-secondary rounded-xl mb-4">
-                <img
-                  src={listingImage}
-                  alt=""
-                  className="w-12 h-12 rounded-lg object-cover"
-                />
+                <img src={listingImage} alt="" className="w-12 h-12 rounded-lg object-cover" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium line-clamp-1">{listingTitle}</p>
                   {listingPrice !== undefined && (
@@ -120,7 +126,6 @@ export default function MessageModal({
               </div>
             )}
 
-            {/* Quick replies */}
             <div className="flex flex-wrap gap-2 mb-3">
               {[
                 "Is this still available?",
@@ -138,7 +143,6 @@ export default function MessageModal({
               ))}
             </div>
 
-            {/* Message input */}
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
@@ -148,7 +152,6 @@ export default function MessageModal({
               autoFocus
             />
 
-            {/* Send button */}
             <button
               onClick={handleSend}
               disabled={!message.trim()}

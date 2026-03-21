@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Sidebar from "@/components/Sidebar";
 import PWAInstall from "@/components/PWAInstall";
+import { MessageProvider } from "@/lib/MessageContext";
 
 export const metadata: Metadata = {
   title: "GrabLt - Local Marketplace with Secure Meetups",
@@ -31,13 +32,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body className="min-h-screen bg-surface-secondary">
-        <Navbar />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 pb-20 md:pb-0 min-w-0">{children}</main>
-        </div>
-        <BottomNav />
-        <PWAInstall />
+        <MessageProvider>
+          <Navbar />
+          <div className="flex">
+            <Sidebar />
+            <main className="flex-1 pb-20 md:pb-0 min-w-0">{children}</main>
+          </div>
+          <BottomNav />
+          <PWAInstall />
+        </MessageProvider>
       </body>
     </html>
   );

@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Search } from "lucide-react";
-import { conversations } from "@/lib/data";
+import { useMessages } from "@/lib/MessageContext";
 
 export default function MessagesPage() {
   const [search, setSearch] = useState("");
+  const { conversations } = useMessages();
 
   const filtered = conversations.filter(
     (c) =>
