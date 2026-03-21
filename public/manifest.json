@@ -1,0 +1,19 @@
+{
+  "name": "GrabLt - Local Marketplace",
+  "short_name": "GrabLt",
+  "description": "Buy & sell locally with deposit protection. Meet safely, trade confidently.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
