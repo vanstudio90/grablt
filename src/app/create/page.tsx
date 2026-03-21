@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { categories } from "@/lib/data";
+import { sidebarCategories } from "@/lib/data";
 
 export default function CreateListing() {
   const [images, setImages] = useState<string[]>([]);
@@ -133,8 +133,8 @@ export default function CreateListing() {
               className="w-full px-3 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
             >
               <option value="">Select category</option>
-              {categories.filter((c) => c.name !== "All").map((c) => (
-                <option key={c.name} value={c.name}>{c.name}</option>
+              {sidebarCategories.map((c) => (
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
