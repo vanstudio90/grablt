@@ -3,20 +3,14 @@
 import { useState } from "react";
 import { MapPin, SlidersHorizontal, ChevronDown } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
-import { listings, categories } from "@/lib/data";
+import { listings } from "@/lib/data";
 
 export default function Home() {
-  const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
 
-  const filteredListings =
-    selectedCategory === "All"
-      ? listings
-      : listings.filter((l) => l.category === selectedCategory);
-
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="px-4 py-6">
       {/* Hero Banner */}
       <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-6 md:p-8 mb-6 text-white">
         <h1 className="text-2xl md:text-3xl font-bold mb-2">
@@ -32,28 +26,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
-        {categories.map((cat) => (
-          <button
-            key={cat.name}
-            onClick={() => setSelectedCategory(cat.name)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition ${
-              selectedCategory === cat.name
-                ? "bg-primary text-white shadow-md shadow-primary/20"
-                : "bg-surface text-text-secondary border border-border hover:border-primary/30 hover:text-primary"
-            }`}
-          >
-            {cat.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Toolbar */}
+      {/* Today's picks header */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-text-secondary">
-          <span className="font-semibold text-text-primary">{filteredListings.length}</span> listings near you
-        </p>
+        <div>
+          <h2 className="text-lg font-bold text-text-primary">Today&apos;s picks</h2>
+          <p className="text-sm text-text-secondary">
+            <span className="font-semibold text-text-primary">{listings.length}</span> listings near you
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -103,23 +83,11 @@ export default function Home() {
       )}
 
       {/* Listings Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-        {filteredListings.map((listing) => (
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+        {listings.map((listing) => (
           <ListingCard key={listing.id} listing={listing} />
         ))}
       </div>
-
-      {filteredListings.length === 0 && (
-        <div className="text-center py-16">
-          <p className="text-text-secondary text-lg">No listings found in this category</p>
-          <button
-            onClick={() => setSelectedCategory("All")}
-            className="mt-3 text-primary font-medium hover:underline"
-          >
-            Browse all listings
-          </button>
-        </div>
-      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import Sidebar from "@/components/Sidebar";
 import PWAInstall from "@/components/PWAInstall";
 
 export const metadata: Metadata = {
@@ -31,7 +32,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen bg-surface-secondary">
         <Navbar />
-        <main className="pb-20 md:pb-0">{children}</main>
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 pb-20 md:pb-0 min-w-0">{children}</main>
+        </div>
         <BottomNav />
         <PWAInstall />
       </body>
