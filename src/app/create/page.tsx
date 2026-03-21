@@ -81,6 +81,15 @@ export default function CreateListing() {
             </button>
           </div>
           <p className="text-xs text-text-tertiary mt-2">Add up to 10 photos. First photo is the cover.</p>
+          <div className="mt-3 bg-warning/10 border border-warning/20 rounded-lg p-3 space-y-1">
+            <p className="text-xs font-semibold text-warning">Photo Requirements</p>
+            <ul className="text-xs text-text-secondary space-y-0.5 list-disc pl-4">
+              <li>Minimum <strong>2 real photos</strong> required (no stock images)</li>
+              <li>Show front, back, and any flaws or damage</li>
+              <li>For electronics: include a photo showing it powered on</li>
+              <li>Photos become the <strong>evidence baseline</strong> for any disputes</li>
+            </ul>
+          </div>
         </div>
 
         {/* Title */}

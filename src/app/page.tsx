@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { MapPin, SlidersHorizontal, ChevronDown } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
 import { listings } from "@/lib/data";
@@ -20,9 +21,14 @@ export default function Home() {
           Secure deposits protect your deal. Reserve items, meet up safely, and
           trade with peace of mind in Los Angeles.
         </p>
-        <div className="flex items-center gap-2 mt-4 text-sm">
-          <MapPin className="w-4 h-4" />
-          <span>Los Angeles, California · 25 mile radius</span>
+        <div className="flex items-center gap-4 mt-4 text-sm">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4" />
+            <span>Los Angeles, California · 25 mile radius</span>
+          </div>
+          <Link href="/how-it-works" className="underline underline-offset-2 hover:text-white transition">
+            How it works →
+          </Link>
         </div>
       </div>
 

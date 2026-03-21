@@ -196,8 +196,11 @@ export default function ListingDetail() {
                 <div className="text-center py-4">
                   <CheckCircle2 className="w-12 h-12 text-accent mx-auto mb-3" />
                   <h3 className="font-bold text-lg text-text-primary">Item Reserved!</h3>
-                  <p className="text-sm text-text-secondary mt-1">Your ${listing.depositAmount} deposit has been placed.</p>
-                  <button onClick={() => setShowMessageModal(true)} className="mt-4 w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover transition">
+                  <p className="text-sm text-text-secondary mt-1">Your ${listing.depositAmount} deposit is safely held in escrow.</p>
+                  <Link href={`/transaction/${listing.id}`} className="mt-4 w-full flex items-center justify-center gap-2 py-3 bg-accent text-white rounded-xl font-medium hover:bg-accent-hover transition">
+                    <ShieldCheck className="w-5 h-5" /> View Transaction
+                  </Link>
+                  <button onClick={() => setShowMessageModal(true)} className="mt-2 w-full flex items-center justify-center gap-2 py-3 border border-border rounded-xl font-medium hover:bg-surface-hover transition">
                     <MessageCircle className="w-5 h-5" /> Message Seller
                   </button>
                 </div>
