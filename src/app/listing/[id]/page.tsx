@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { listings, getListingsBySeller } from "@/lib/data";
 import ListingCard from "@/components/ListingCard";
+import MessageModal from "@/components/MessageModal";
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -35,6 +36,7 @@ export default function ListingDetail() {
   const [paymentMethod, setPaymentMethod] = useState<"full" | "deposit">("deposit");
   const [depositPlaced, setDepositPlaced] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   if (!listing) {
     return (
@@ -91,10 +93,10 @@ export default function ListingDetail() {
 
               {/* FB-style action bar */}
               <div className="flex items-center gap-2 mt-4">
-                <Link href="/messages" className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary text-white rounded-lg font-medium text-sm hover:bg-primary-hover transition">
+                <button onClick={() => setShowMessageModal(true)} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary text-white rounded-lg font-medium text-sm hover:bg-primary-hover transition">
                   <MessageCircle className="w-5 h-5" />
                   Message
-                </Link>
+                </button>
                 <button
                   onClick={() => setSaved(!saved)}
                   className="w-11 h-11 flex items-center justify-center border border-border rounded-lg hover:bg-surface-hover transition"
@@ -195,9 +197,9 @@ export default function ListingDetail() {
                   <CheckCircle2 className="w-12 h-12 text-accent mx-auto mb-3" />
                   <h3 className="font-bold text-lg text-text-primary">Item Reserved!</h3>
                   <p className="text-sm text-text-secondary mt-1">Your ${listing.depositAmount} deposit has been placed.</p>
-                  <Link href="/messages" className="mt-4 w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover transition">
+                  <button onClick={() => setShowMessageModal(true)} className="mt-4 w-full flex items-center justify-center gap-2 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover transition">
                     <MessageCircle className="w-5 h-5" /> Message Seller
-                  </Link>
+                  </button>
                 </div>
               ) : (
                 <>
@@ -261,6 +263,16 @@ export default function ListingDetail() {
           </div>
         </div>
       </div>
+
+      {/* Message Modal */}
+      <MessageModal
+        isOpen={showMessageModal}
+        onClose={() => setShowMessageModal(false)}
+        recipient={{ name: listing.seller.name, avatar: listing.seller.avatar }}
+        listingTitle={listing.title}
+        listingImage={listing.images[0]}
+        listingPrice={listing.price}
+      />
 
       {/* Deposit Modal */}
       {showDepositModal && (
