@@ -32,10 +32,9 @@ import {
   Trophy,
   Gamepad2,
   Users,
-  ShoppingCart,
 } from "lucide-react";
 import { useState } from "react";
-import { smartSearch } from "@/lib/data";
+import { useLocation } from "@/lib/useLocation";
 
 const menuItems = [
   { label: "Browse all", href: "/", icon: Globe, highlight: true },
@@ -72,6 +71,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const { displayLocation, radius } = useLocation();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +142,7 @@ export default function Sidebar() {
         <div className="mt-4 pt-4 border-t border-border">
           <h3 className="text-sm font-semibold text-text-primary mb-1">Location</h3>
           <button className="flex items-center gap-1 text-sm text-primary hover:underline">
-            <MapPin className="w-4 h-4" /> Los Angeles, CA · Within 25 mi
+            <MapPin className="w-4 h-4" /> {displayLocation} · Within {radius} mi
           </button>
         </div>
 
