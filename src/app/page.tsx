@@ -17,6 +17,7 @@ import {
   X,
   Flame,
   BadgeCheck,
+  Loader2,
 } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
 import { listings as demoListings, sidebarCategories, type Listing } from "@/lib/data";
@@ -28,7 +29,7 @@ export default function Home() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [manualCity, setManualCity] = useState("");
   const [dbListings, setDbListings] = useState<Listing[]>([]);
-  const { location, radius, displayLocation, requestGPSLocation, setManualLocation, setRadius, permissionAsked } = useLocation();
+  const { location, radius, displayLocation, requestGPSLocation, setManualLocation, setRadius, permissionAsked, gpsLoading } = useLocation();
 
   // Load DB listings
   useEffect(() => {
@@ -286,13 +287,22 @@ export default function Home() {
 
               {/* GPS option */}
               <button
-                onClick={() => { requestGPSLocation(); setShowLocationModal(false); }}
-                className="w-full flex items-center gap-3 p-4 border border-border rounded-xl mb-3 hover:border-primary/30 transition"
+                onClick={() => {
+                  requestGPSLocation();
+                  // Close modal after a short delay to let GPS resolve
+                  setTimeout(() => setShowLocationModal(false), 500);
+                }}
+                disabled={gpsLoading}
+                className="w-full flex items-center gap-3 p-4 border border-border rounded-xl mb-3 hover:border-primary/30 transition disabled:opacity-60"
               >
-                <Navigation className="w-5 h-5 text-primary" />
+                {gpsLoading ? (
+                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                ) : (
+                  <Navigation className="w-5 h-5 text-primary" />
+                )}
                 <div className="text-left">
-                  <p className="font-medium text-sm">Use my current location</p>
-                  <p className="text-xs text-text-tertiary">Auto-detect via GPS</p>
+                  <p className="font-medium text-sm">{gpsLoading ? "Detecting location..." : "Use my current location"}</p>
+                  <p className="text-xs text-text-tertiary">{gpsLoading ? "Please allow location access" : "Auto-detect via GPS"}</p>
                 </div>
               </button>
 

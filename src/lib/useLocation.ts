@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface LocationData {
   city: string;
@@ -28,9 +28,9 @@ export function useLocation() {
   const [radius, setRadiusState] = useState(25);
   const [loading, setLoading] = useState(true);
   const [permissionAsked, setPermissionAsked] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
   useEffect(() => {
-    // Check cached location first
     const cached = localStorage.getItem(STORAGE_KEY);
     const cachedRadius = localStorage.getItem(RADIUS_KEY);
     if (cachedRadius) setRadiusState(Number(cachedRadius));
@@ -40,82 +40,80 @@ export function useLocation() {
         setLocation(JSON.parse(cached));
         setLoading(false);
         return;
-      } catch {}
+      } catch { /* ignore */ }
     }
 
-    // IP-based fallback for first visit
-    fetchIPLocation();
-  }, []);
-
-  const fetchIPLocation = async () => {
-    try {
-      const res = await fetch("https://ipapi.co/json/");
-      if (res.ok) {
-        const data = await res.json();
-        const loc: LocationData = {
-          city: data.city || "Los Angeles",
-          region: data.region || "California",
-          country: data.country_code || "US",
-          lat: data.latitude || 34.0522,
-          lon: data.longitude || -118.2437,
-          source: "ip",
-        };
-        setLocation(loc);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(loc));
-      }
-    } catch {
-      // Keep default
-    }
-    setLoading(false);
-  };
-
-  const requestGPSLocation = () => {
-    setPermissionAsked(true);
-    if (!navigator.geolocation) return;
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          // Reverse geocode
-          const res = await fetch(
-            `https://ipapi.co/${pos.coords.latitude},${pos.coords.longitude}/json/`
-          );
-          let city = "Your Area";
-          let region = "";
-          if (res.ok) {
-            const data = await res.json();
-            city = data.city || city;
-            region = data.region || region;
-          }
+    // IP-based fallback
+    fetch("https://ipapi.co/json/")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.city) {
           const loc: LocationData = {
-            city,
-            region,
-            country: "US",
-            lat: pos.coords.latitude,
-            lon: pos.coords.longitude,
-            source: "gps",
-          };
-          setLocation(loc);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(loc));
-        } catch {
-          // GPS coords without reverse geocode
-          const loc: LocationData = {
-            city: "Your Area",
-            region: "",
-            country: "US",
-            lat: pos.coords.latitude,
-            lon: pos.coords.longitude,
-            source: "gps",
+            city: data.city,
+            region: data.region || "",
+            country: data.country_code || "US",
+            lat: data.latitude || 0,
+            lon: data.longitude || 0,
+            source: "ip",
           };
           setLocation(loc);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(loc));
         }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const requestGPSLocation = useCallback(() => {
+    setPermissionAsked(true);
+    setGpsLoading(true);
+
+    if (!navigator.geolocation) {
+      setGpsLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        let city = "Your Area";
+        let region = "";
+
+        try {
+          // Use Nominatim (free, no API key needed)
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`,
+            { headers: { "Accept-Language": "en" } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            city = addr.city || addr.town || addr.village || addr.county || city;
+            region = addr.state || region;
+          }
+        } catch {
+          // Use coords only
+        }
+
+        const loc: LocationData = {
+          city,
+          region,
+          country: "US",
+          lat: latitude,
+          lon: longitude,
+          source: "gps",
+        };
+        setLocation(loc);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(loc));
+        setGpsLoading(false);
       },
       () => {
-        // Permission denied — keep IP/default
-      }
+        // Permission denied
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
     );
-  };
+  }, []);
 
   const setManualLocation = (city: string, region: string) => {
     const loc: LocationData = {
@@ -141,6 +139,7 @@ export function useLocation() {
     location,
     radius,
     loading,
+    gpsLoading,
     permissionAsked,
     displayLocation,
     requestGPSLocation,
