@@ -20,7 +20,9 @@ import {
   ShoppingBag,
   Tag,
   HelpCircle,
+  LogIn,
 } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -28,6 +30,7 @@ export default function Navbar() {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const router = useRouter();
   const accountRef = useRef<HTMLDivElement>(null);
+  const { user, loading, signOut } = useAuth();
 
   // Close account menu on outside click
   useEffect(() => {
@@ -46,6 +49,16 @@ export default function Navbar() {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
+  const handleSignOut = async () => {
+    setShowAccountMenu(false);
+    setMobileMenu(false);
+    await signOut();
+    router.push("/login");
+  };
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const avatarUrl = user?.user_metadata?.avatar_url;
 
   return (
     <header className="sticky top-0 z-50 bg-surface border-b border-border">
@@ -98,91 +111,86 @@ export default function Navbar() {
               <Bell className="w-5 h-5 text-text-secondary" />
             </button>
 
-            {/* Account icon with dropdown */}
-            <div className="relative" ref={accountRef}>
-              <button
-                onClick={() => setShowAccountMenu(!showAccountMenu)}
-                className="p-2 hover:bg-surface-hover rounded-full transition"
-              >
-                <User className="w-5 h-5 text-text-secondary" />
-              </button>
+            {/* Account — changes based on auth state */}
+            {!loading && !user ? (
+              /* Not logged in */
+              <Link href="/login" className="flex items-center gap-2 px-4 py-2 border border-border rounded-full text-sm font-medium hover:bg-surface-hover transition">
+                <LogIn className="w-4 h-4" /> Log In
+              </Link>
+            ) : (
+              /* Logged in — account dropdown */
+              <div className="relative" ref={accountRef}>
+                <button
+                  onClick={() => setShowAccountMenu(!showAccountMenu)}
+                  className="p-1 hover:bg-surface-hover rounded-full transition"
+                >
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-primary">{displayName.charAt(0).toUpperCase()}</span>
+                    </div>
+                  )}
+                </button>
 
-              {showAccountMenu && (
-                <div className="absolute right-0 top-12 bg-surface border border-border rounded-xl shadow-xl py-2 w-64 z-50">
-                  {/* User info */}
-                  <div className="px-4 py-3 border-b border-border">
-                    <div className="flex items-center gap-3">
-                      <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" alt="" className="w-10 h-10 rounded-full object-cover" />
-                      <div>
-                        <p className="font-semibold text-sm text-text-primary">You</p>
-                        <p className="text-xs text-text-tertiary">Los Angeles, CA</p>
+                {showAccountMenu && (
+                  <div className="absolute right-0 top-12 bg-surface border border-border rounded-xl shadow-xl py-2 w-64 z-50">
+                    {/* User info */}
+                    <div className="px-4 py-3 border-b border-border">
+                      <div className="flex items-center gap-3">
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                            <span className="text-lg font-bold text-primary">{displayName.charAt(0).toUpperCase()}</span>
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm text-text-primary truncate">{displayName}</p>
+                          <p className="text-xs text-text-tertiary truncate">{user?.email}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Menu items */}
-                  <div className="py-1">
-                    <Link
-                      href="/profile"
-                      onClick={() => setShowAccountMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
-                    >
-                      <User className="w-4 h-4 text-text-secondary" />
-                      <span className="text-sm text-text-primary flex-1">My Profile</span>
-                      <ChevronRight className="w-4 h-4 text-text-tertiary" />
-                    </Link>
-                    <Link
-                      href="/buying"
-                      onClick={() => setShowAccountMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
-                    >
-                      <ShoppingBag className="w-4 h-4 text-text-secondary" />
-                      <span className="text-sm text-text-primary flex-1">Buying</span>
-                      <ChevronRight className="w-4 h-4 text-text-tertiary" />
-                    </Link>
-                    <Link
-                      href="/selling"
-                      onClick={() => setShowAccountMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
-                    >
-                      <Tag className="w-4 h-4 text-text-secondary" />
-                      <span className="text-sm text-text-primary flex-1">Selling</span>
-                      <ChevronRight className="w-4 h-4 text-text-tertiary" />
-                    </Link>
-                  </div>
+                    <div className="py-1">
+                      <Link href="/profile" onClick={() => setShowAccountMenu(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition">
+                        <User className="w-4 h-4 text-text-secondary" />
+                        <span className="text-sm text-text-primary flex-1">My Profile</span>
+                        <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                      </Link>
+                      <Link href="/buying" onClick={() => setShowAccountMenu(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition">
+                        <ShoppingBag className="w-4 h-4 text-text-secondary" />
+                        <span className="text-sm text-text-primary flex-1">Buying</span>
+                        <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                      </Link>
+                      <Link href="/selling" onClick={() => setShowAccountMenu(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition">
+                        <Tag className="w-4 h-4 text-text-secondary" />
+                        <span className="text-sm text-text-primary flex-1">Selling</span>
+                        <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                      </Link>
+                    </div>
 
-                  <div className="border-t border-border py-1">
-                    <Link
-                      href="/profile"
-                      onClick={() => setShowAccountMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
-                    >
-                      <Settings className="w-4 h-4 text-text-secondary" />
-                      <span className="text-sm text-text-primary">Account Settings</span>
-                    </Link>
-                    <Link
-                      href="/how-it-works"
-                      onClick={() => setShowAccountMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
-                    >
-                      <HelpCircle className="w-4 h-4 text-text-secondary" />
-                      <span className="text-sm text-text-primary">Help & Safety</span>
-                    </Link>
-                  </div>
+                    <div className="border-t border-border py-1">
+                      <Link href="/profile" onClick={() => setShowAccountMenu(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition">
+                        <Settings className="w-4 h-4 text-text-secondary" />
+                        <span className="text-sm text-text-primary">Account Settings</span>
+                      </Link>
+                      <Link href="/how-it-works" onClick={() => setShowAccountMenu(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition">
+                        <HelpCircle className="w-4 h-4 text-text-secondary" />
+                        <span className="text-sm text-text-primary">Help & Safety</span>
+                      </Link>
+                    </div>
 
-                  <div className="border-t border-border py-1">
-                    <Link
-                      href="/login"
-                      onClick={() => setShowAccountMenu(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
-                    >
-                      <LogOut className="w-4 h-4 text-danger" />
-                      <span className="text-sm text-danger">Log Out</span>
-                    </Link>
+                    <div className="border-t border-border py-1">
+                      <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition w-full text-left">
+                        <LogOut className="w-4 h-4 text-danger" />
+                        <span className="text-sm text-danger">Log Out</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -209,6 +217,21 @@ export default function Navbar() {
       {/* Mobile Menu Dropdown */}
       {mobileMenu && (
         <div className="md:hidden border-t border-border bg-surface px-4 py-3 space-y-1">
+          {user && (
+            <div className="flex items-center gap-3 px-3 py-2.5 mb-1">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+              ) : (
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary">{displayName.charAt(0).toUpperCase()}</span>
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="font-semibold text-sm truncate">{displayName}</p>
+                <p className="text-xs text-text-tertiary truncate">{user.email}</p>
+              </div>
+            </div>
+          )}
           <Link href="/create" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
             <Plus className="w-5 h-5 text-primary" />
             <span className="font-medium">Sell Something</span>
@@ -230,18 +253,33 @@ export default function Navbar() {
             <span>Messages</span>
           </Link>
           <div className="border-t border-border my-1" />
-          <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
-            <User className="w-5 h-5 text-text-secondary" />
-            <span>Profile</span>
-          </Link>
-          <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
-            <Settings className="w-5 h-5 text-text-secondary" />
-            <span>Account Settings</span>
-          </Link>
-          <Link href="/login" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
-            <LogOut className="w-5 h-5 text-danger" />
-            <span className="text-danger">Log Out</span>
-          </Link>
+          {user ? (
+            <>
+              <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+                <User className="w-5 h-5 text-text-secondary" />
+                <span>Profile</span>
+              </Link>
+              <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+                <Settings className="w-5 h-5 text-text-secondary" />
+                <span>Account Settings</span>
+              </Link>
+              <button onClick={handleSignOut} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition w-full text-left">
+                <LogOut className="w-5 h-5 text-danger" />
+                <span className="text-danger">Log Out</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+                <LogIn className="w-5 h-5 text-primary" />
+                <span className="text-primary font-medium">Log In</span>
+              </Link>
+              <Link href="/signup" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+                <User className="w-5 h-5 text-text-secondary" />
+                <span>Sign Up</span>
+              </Link>
+            </>
+          )}
         </div>
       )}
     </header>
