@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -21,14 +21,20 @@ import {
   MoreHorizontal,
   ShoppingCart,
   Truck,
+  Loader2,
 } from "lucide-react";
-import { listings, getListingsBySeller } from "@/lib/data";
+import { listings, getListingsBySeller, type Listing } from "@/lib/data";
 import ListingCard from "@/components/ListingCard";
 import MessageModal from "@/components/MessageModal";
+import { supabase } from "@/lib/supabase";
 
 export default function ListingDetail() {
   const { id } = useParams();
-  const listing = listings.find((l) => l.id === id);
+  const idStr = id as string;
+  const isDbListing = idStr.startsWith("db-");
+
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [loadingDb, setLoadingDb] = useState(isDbListing);
   const [currentImage, setCurrentImage] = useState(0);
   const [saved, setSaved] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -37,6 +43,61 @@ export default function ListingDetail() {
   const [showMore, setShowMore] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping">("pickup");
+
+  // Load demo listing or DB listing
+  useEffect(() => {
+    if (isDbListing) {
+      const dbId = idStr.replace("db-", "");
+      supabase
+        .from("listings")
+        .select("*, profiles(full_name, avatar_url)")
+        .eq("id", dbId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setListing({
+              id: idStr,
+              title: data.title,
+              price: Number(data.price),
+              images: data.images || [],
+              category: data.category,
+              condition: data.condition,
+              description: data.description || "",
+              location: data.location || "Los Angeles, CA",
+              distance: "Nearby",
+              postedAt: getTimeAgo(data.created_at),
+              seller: {
+                id: data.user_id,
+                name: data.profiles?.full_name || "User",
+                avatar: data.profiles?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200",
+                rating: 5.0,
+                reviews: 0,
+                joined: "New",
+                responseTime: "Usually responds quickly",
+              },
+              saved: false,
+              depositAmount: Math.max(5, Math.round(Number(data.price) * 0.1)),
+              status: "available",
+              shippingAvailable: data.shipping_available || false,
+              shippingPrice: Number(data.shipping_price) || 0,
+              deliveryOptions: data.shipping_available ? ["pickup", "shipping"] : ["pickup"],
+            });
+          }
+          setLoadingDb(false);
+        });
+    } else {
+      const found = listings.find((l) => l.id === idStr);
+      setListing(found || null);
+    }
+  }, [idStr, isDbListing]);
+
+  if (loadingDb) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+      </div>
+    );
+  }
 
   if (!listing) {
     return (
@@ -47,7 +108,7 @@ export default function ListingDetail() {
     );
   }
 
-  const sellerListings = getListingsBySeller(listing.seller.id).filter((l) => l.id !== listing.id);
+  const sellerListings = isDbListing ? [] : getListingsBySeller(listing.seller.id).filter((l) => l.id !== listing.id);
 
   return (
     <>
@@ -464,4 +525,14 @@ export default function ListingDetail() {
       )}
     </>
   );
+}
+
+function getTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hours ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} days ago`;
 }

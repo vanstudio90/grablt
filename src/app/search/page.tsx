@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Search, MapPin } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
-import { listings, smartSearch, getListingsByCategory, sidebarCategories } from "@/lib/data";
+import { listings, smartSearch, sidebarCategories, type Listing } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -14,20 +15,43 @@ function SearchContent() {
 
   const [query, setQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [dbListings, setDbListings] = useState<Listing[]>([]);
 
   useEffect(() => {
     setQuery(searchParams.get("q") || "");
     setSelectedCategory(searchParams.get("category") || "");
   }, [searchParams]);
 
-  let results = listings;
+  // Load DB listings
+  useEffect(() => {
+    supabase.from("listings").select("*, profiles(full_name, avatar_url)").eq("status", "available").then(({ data }) => {
+      if (data) {
+        setDbListings(data.map((l: Record<string, unknown>) => ({
+          id: `db-${l.id}`, title: l.title as string, price: Number(l.price),
+          images: (l.images as string[]) || [], category: l.category as string,
+          condition: l.condition as string, description: (l.description as string) || "",
+          location: (l.location as string) || "Los Angeles, CA", distance: "Nearby",
+          postedAt: "Recently",
+          seller: { id: l.user_id as string, name: (l.profiles as Record<string, string>)?.full_name || "User", avatar: (l.profiles as Record<string, string>)?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200", rating: 5.0, reviews: 0, joined: "New", responseTime: "Usually responds quickly" },
+          saved: false, depositAmount: Math.max(5, Math.round(Number(l.price) * 0.1)),
+          status: "available" as const, shippingAvailable: (l.shipping_available as boolean) || false,
+          shippingPrice: Number(l.shipping_price) || 0, deliveryOptions: (l.shipping_available as boolean) ? ["pickup", "shipping"] : ["pickup"],
+        })));
+      }
+    });
+  }, []);
+
+  const allListings = [...dbListings, ...listings];
+  let results = allListings;
   if (query) {
-    results = smartSearch(query);
+    // Search demo listings with smartSearch, plus filter DB listings by title/description
+    const demoResults = smartSearch(query);
+    const q = query.toLowerCase();
+    const dbResults = dbListings.filter((l) => l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q) || l.category.toLowerCase().includes(q));
+    results = [...dbResults, ...demoResults];
   }
   if (selectedCategory) {
-    results = (query ? results : listings).filter(
-      (l) => l.category === selectedCategory
-    );
+    results = results.filter((l) => l.category === selectedCategory);
   }
 
   const handleSearch = (e: React.FormEvent) => {
