@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Trash2, ShieldCheck, ShoppingCart, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Trash2, ShieldCheck, ShoppingCart } from "lucide-react";
 import { listings, type Listing } from "@/lib/data";
 
 interface CartEntry {
@@ -13,25 +13,28 @@ interface CartEntry {
 
 function CartContent() {
   const searchParams = useSearchParams();
-  const [cart, setCart] = useState<CartEntry[]>([]);
+  const [cart, setCart] = useState<CartEntry[]>(() => {
+    // Pre-populate with demo items
+    return [
+      { listing: listings[14], depositOnly: true }, // PS5
+      { listing: listings[33], depositOnly: true }, // Standing desk
+    ];
+  });
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Check for add param
     const addId = searchParams.get("add");
-    if (addId) {
+    if (addId && !initialized) {
       const listing = listings.find((l) => l.id === addId);
-      if (listing && !cart.find((c) => c.listing.id === addId)) {
-        setCart((prev) => [...prev, { listing, depositOnly: true }]);
+      if (listing) {
+        setCart((prev) => {
+          if (prev.find((c) => c.listing.id === addId)) return prev;
+          return [...prev, { listing, depositOnly: true }];
+        });
       }
     }
-    // Pre-populate with a couple of items for demo
-    if (!addId && cart.length === 0) {
-      setCart([
-        { listing: listings[14], depositOnly: true }, // PS5
-        { listing: listings[33], depositOnly: true }, // Standing desk
-      ]);
-    }
-  }, [searchParams]);
+    setInitialized(true);
+  }, [searchParams, initialized]);
 
   const removeItem = (id: string) => {
     setCart(cart.filter((c) => c.listing.id !== id));

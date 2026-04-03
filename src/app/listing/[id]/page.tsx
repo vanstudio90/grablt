@@ -5,10 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
-  Heart,
   Share2,
   MapPin,
-  Clock,
   Star,
   ShieldCheck,
   MessageCircle,
@@ -23,7 +21,6 @@ import {
   MoreHorizontal,
   ShoppingCart,
   Truck,
-  Package,
 } from "lucide-react";
 import { listings, getListingsBySeller } from "@/lib/data";
 import ListingCard from "@/components/ListingCard";
@@ -256,24 +253,37 @@ export default function ListingDetail() {
                 </div>
               ) : (
                 <>
-                  {/* Buy Now — full price */}
-                  <button onClick={() => { setPaymentMethod("full"); setShowDepositModal(true); }} className="w-full py-3.5 bg-accent text-white rounded-xl font-semibold hover:bg-accent-hover transition flex items-center justify-center gap-2 text-base">
-                    <CreditCard className="w-5 h-5" />
-                    Buy Now — ${(listing.price + (deliveryMethod === "shipping" ? listing.shippingPrice : 0)).toLocaleString()}
-                  </button>
-                  {/* Reserve with deposit */}
-                  {listing.depositAmount > 0 && (
-                    <button onClick={() => { setPaymentMethod("deposit"); setShowDepositModal(true); }} className="w-full py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover transition flex items-center justify-center gap-2">
-                      <ShieldCheck className="w-5 h-5" />
-                      Reserve with ${listing.depositAmount} Deposit
-                    </button>
+                  {listing.price === 0 ? (
+                    /* Free item — just message seller */
+                    <>
+                      <button onClick={() => setShowMessageModal(true)} className="w-full py-3.5 bg-accent text-white rounded-xl font-semibold hover:bg-accent-hover transition flex items-center justify-center gap-2 text-base">
+                        <MessageCircle className="w-5 h-5" />
+                        Request This Item (Free)
+                      </button>
+                      <p className="text-xs text-text-tertiary text-center">Message the seller to arrange pickup</p>
+                    </>
+                  ) : (
+                    <>
+                      {/* Buy Now — full price */}
+                      <button onClick={() => { setPaymentMethod("full"); setShowDepositModal(true); }} className="w-full py-3.5 bg-accent text-white rounded-xl font-semibold hover:bg-accent-hover transition flex items-center justify-center gap-2 text-base">
+                        <CreditCard className="w-5 h-5" />
+                        Buy Now — ${(listing.price + (deliveryMethod === "shipping" ? listing.shippingPrice : 0)).toLocaleString()}
+                      </button>
+                      {/* Reserve with deposit */}
+                      {listing.depositAmount > 0 && (
+                        <button onClick={() => { setPaymentMethod("deposit"); setShowDepositModal(true); }} className="w-full py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover transition flex items-center justify-center gap-2">
+                          <ShieldCheck className="w-5 h-5" />
+                          Reserve with ${listing.depositAmount} Deposit
+                        </button>
+                      )}
+                      <Link href={`/cart?add=${listing.id}`} className="w-full py-3 border border-border text-text-primary rounded-xl font-medium hover:bg-surface-hover transition flex items-center justify-center gap-2">
+                        <ShoppingCart className="w-5 h-5" /> Add to Cart
+                      </Link>
+                      <p className="text-xs text-text-tertiary text-center flex items-center justify-center gap-1">
+                        <Info className="w-3 h-3" /> All purchases are escrow-protected
+                      </p>
+                    </>
                   )}
-                  <Link href={`/cart?add=${listing.id}`} className="w-full py-3 border border-border text-text-primary rounded-xl font-medium hover:bg-surface-hover transition flex items-center justify-center gap-2">
-                    <ShoppingCart className="w-5 h-5" /> Add to Cart
-                  </Link>
-                  <p className="text-xs text-text-tertiary text-center flex items-center justify-center gap-1">
-                    <Info className="w-3 h-3" /> All purchases are escrow-protected
-                  </p>
                 </>
               )}
             </div>
