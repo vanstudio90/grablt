@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -14,12 +14,31 @@ import {
   X,
   ShieldCheck,
   ShoppingCart,
+  Settings,
+  LogOut,
+  ChevronRight,
+  ShoppingBag,
+  Tag,
+  HelpCircle,
 } from "lucide-react";
 
 export default function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const router = useRouter();
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  // Close account menu on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setShowAccountMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,9 +97,92 @@ export default function Navbar() {
             <button className="p-2 hover:bg-surface-hover rounded-full transition">
               <Bell className="w-5 h-5 text-text-secondary" />
             </button>
-            <Link href="/profile" className="p-2 hover:bg-surface-hover rounded-full transition">
-              <User className="w-5 h-5 text-text-secondary" />
-            </Link>
+
+            {/* Account icon with dropdown */}
+            <div className="relative" ref={accountRef}>
+              <button
+                onClick={() => setShowAccountMenu(!showAccountMenu)}
+                className="p-2 hover:bg-surface-hover rounded-full transition"
+              >
+                <User className="w-5 h-5 text-text-secondary" />
+              </button>
+
+              {showAccountMenu && (
+                <div className="absolute right-0 top-12 bg-surface border border-border rounded-xl shadow-xl py-2 w-64 z-50">
+                  {/* User info */}
+                  <div className="px-4 py-3 border-b border-border">
+                    <div className="flex items-center gap-3">
+                      <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" alt="" className="w-10 h-10 rounded-full object-cover" />
+                      <div>
+                        <p className="font-semibold text-sm text-text-primary">You</p>
+                        <p className="text-xs text-text-tertiary">Los Angeles, CA</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Menu items */}
+                  <div className="py-1">
+                    <Link
+                      href="/profile"
+                      onClick={() => setShowAccountMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
+                    >
+                      <User className="w-4 h-4 text-text-secondary" />
+                      <span className="text-sm text-text-primary flex-1">My Profile</span>
+                      <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                    </Link>
+                    <Link
+                      href="/buying"
+                      onClick={() => setShowAccountMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
+                    >
+                      <ShoppingBag className="w-4 h-4 text-text-secondary" />
+                      <span className="text-sm text-text-primary flex-1">Buying</span>
+                      <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                    </Link>
+                    <Link
+                      href="/selling"
+                      onClick={() => setShowAccountMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
+                    >
+                      <Tag className="w-4 h-4 text-text-secondary" />
+                      <span className="text-sm text-text-primary flex-1">Selling</span>
+                      <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                    </Link>
+                  </div>
+
+                  <div className="border-t border-border py-1">
+                    <Link
+                      href="/profile"
+                      onClick={() => setShowAccountMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
+                    >
+                      <Settings className="w-4 h-4 text-text-secondary" />
+                      <span className="text-sm text-text-primary">Account Settings</span>
+                    </Link>
+                    <Link
+                      href="/how-it-works"
+                      onClick={() => setShowAccountMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
+                    >
+                      <HelpCircle className="w-4 h-4 text-text-secondary" />
+                      <span className="text-sm text-text-primary">Help & Safety</span>
+                    </Link>
+                  </div>
+
+                  <div className="border-t border-border py-1">
+                    <Link
+                      href="/login"
+                      onClick={() => setShowAccountMenu(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition"
+                    >
+                      <LogOut className="w-4 h-4 text-danger" />
+                      <span className="text-sm text-danger">Log Out</span>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -111,6 +213,14 @@ export default function Navbar() {
             <Plus className="w-5 h-5 text-primary" />
             <span className="font-medium">Sell Something</span>
           </Link>
+          <Link href="/buying" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+            <ShoppingBag className="w-5 h-5 text-text-secondary" />
+            <span>Buying</span>
+          </Link>
+          <Link href="/selling" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+            <Tag className="w-5 h-5 text-text-secondary" />
+            <span>Selling</span>
+          </Link>
           <Link href="/cart" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
             <ShoppingCart className="w-5 h-5 text-text-secondary" />
             <span>Cart</span>
@@ -119,13 +229,18 @@ export default function Navbar() {
             <MessageCircle className="w-5 h-5 text-text-secondary" />
             <span>Messages</span>
           </Link>
+          <div className="border-t border-border my-1" />
           <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
             <User className="w-5 h-5 text-text-secondary" />
             <span>Profile</span>
           </Link>
+          <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+            <Settings className="w-5 h-5 text-text-secondary" />
+            <span>Account Settings</span>
+          </Link>
           <Link href="/login" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
-            <User className="w-5 h-5 text-text-secondary" />
-            <span>Log In / Sign Up</span>
+            <LogOut className="w-5 h-5 text-danger" />
+            <span className="text-danger">Log Out</span>
           </Link>
         </div>
       )}
