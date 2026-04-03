@@ -1,53 +1,106 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
   Send,
   MapPin,
-  ShieldCheck,
   MoreVertical,
   DollarSign,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
-import { useMessages } from "@/lib/MessageContext";
+import { useMessages, type DbMessage } from "@/lib/MessageContext";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function ChatPage() {
   const { id } = useParams();
-  const { conversations, addReply } = useMessages();
+  const { conversations, getMessages, addReply } = useMessages();
+  const { user } = useAuth();
   const conversation = conversations.find((c) => c.id === id);
+  const [messages, setMessages] = useState<DbMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [showMeetupConfirm, setShowMeetupConfirm] = useState(false);
+  const [loadingMsgs, setLoadingMsgs] = useState(true);
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (id) {
+      getMessages(id as string).then((msgs) => {
+        setMessages(msgs);
+        setLoadingMsgs(false);
+      });
+    }
+  }, [id]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Poll for new messages every 5 seconds
+  useEffect(() => {
+    if (!id) return;
+    const interval = setInterval(async () => {
+      const msgs = await getMessages(id as string);
+      setMessages(msgs);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [id]);
 
   if (!conversation) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="text-text-secondary">Conversation not found</p>
-        <Link href="/messages" className="text-primary font-medium mt-3 inline-block hover:underline">
-          Back to messages
-        </Link>
+        {loadingMsgs ? (
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+        ) : (
+          <>
+            <p className="text-text-secondary">Conversation not found</p>
+            <Link href="/messages" className="text-primary font-medium mt-3 inline-block hover:underline">Back to messages</Link>
+          </>
+        )}
       </div>
     );
   }
 
-  const sendMsg = () => {
-    if (!newMessage.trim()) return;
-    addReply(conversation.id, newMessage);
+  const sendMsg = async () => {
+    if (!newMessage.trim() || sending) return;
+    setSending(true);
+    const text = newMessage;
     setNewMessage("");
+    // Optimistic update
+    setMessages((prev) => [...prev, {
+      id: `temp-${Date.now()}`,
+      conversation_id: id as string,
+      sender_id: user?.id || "",
+      recipient_id: "",
+      text,
+      created_at: new Date().toISOString(),
+      read: false,
+    }]);
+    await addReply(id as string, text);
+    const msgs = await getMessages(id as string);
+    setMessages(msgs);
+    setSending(false);
+  };
+
+  const timeStr = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   };
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)]">
+    <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-4rem)]">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-surface border-b border-border">
         <Link href="/messages" className="p-1 hover:bg-surface-hover rounded-full transition">
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <img src={conversation.otherUser.avatar} alt="" className="w-9 h-9 rounded-full object-cover" />
+        <img src={conversation.other_user_avatar} alt="" className="w-9 h-9 rounded-full object-cover" />
         <div className="flex-1">
-          <p className="font-semibold text-sm">{conversation.otherUser.name}</p>
+          <p className="font-semibold text-sm">{conversation.other_user_name}</p>
           <p className="text-xs text-text-tertiary">Active now</p>
         </div>
         <button className="p-2 hover:bg-surface-hover rounded-full transition">
@@ -56,39 +109,48 @@ export default function ChatPage() {
       </div>
 
       {/* Listing context */}
-      {conversation.listing.id && (
+      {conversation.listing_title && conversation.listing_title !== "General inquiry" && (
         <div className="px-4 py-2 bg-surface-secondary border-b border-border">
-          <Link href={`/listing/${conversation.listing.id}`} className="flex items-center gap-3 hover:opacity-80 transition">
-            <img src={conversation.listing.image} alt="" className="w-10 h-10 rounded-lg object-cover" />
+          <div className="flex items-center gap-3">
+            {conversation.listing_image && (
+              <img src={conversation.listing_image} alt="" className="w-10 h-10 rounded-lg object-cover" />
+            )}
             <div className="flex-1">
-              <p className="text-sm font-medium line-clamp-1">{conversation.listing.title}</p>
+              <p className="text-sm font-medium line-clamp-1">{conversation.listing_title}</p>
               <p className="text-sm font-bold text-primary">
-                {conversation.listing.price === 0 ? "FREE" : `$${conversation.listing.price}`}
+                {conversation.listing_price === 0 ? "FREE" : `$${conversation.listing_price}`}
               </p>
             </div>
-          </Link>
+          </div>
         </div>
       )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-        {conversation.messages.map((msg) => {
-          const isMe = msg.senderId === "me";
-          return (
-            <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${
-                isMe
-                  ? "bg-primary text-white rounded-br-md"
-                  : "bg-surface border border-border text-text-primary rounded-bl-md"
-              }`}>
-                <p className="text-sm">{msg.text}</p>
-                <p className={`text-[10px] mt-1 ${isMe ? "text-white/60" : "text-text-tertiary"}`}>
-                  {msg.timestamp}
-                </p>
+        {loadingMsgs ? (
+          <div className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" /></div>
+        ) : messages.length === 0 ? (
+          <p className="text-center text-text-tertiary text-sm py-8">No messages yet. Say hello!</p>
+        ) : (
+          messages.map((msg) => {
+            const isMe = msg.sender_id === user?.id;
+            return (
+              <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${
+                  isMe
+                    ? "bg-primary text-white rounded-br-md"
+                    : "bg-surface border border-border text-text-primary rounded-bl-md"
+                }`}>
+                  <p className="text-sm">{msg.text}</p>
+                  <p className={`text-[10px] mt-1 ${isMe ? "text-white/60" : "text-text-tertiary"}`}>
+                    {timeStr(msg.created_at)}
+                  </p>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
+        <div ref={bottomRef} />
       </div>
 
       {/* Quick Actions */}
@@ -101,14 +163,14 @@ export default function ChatPage() {
           Confirm Exchange
         </button>
         <button
-          onClick={() => { setNewMessage("How about we meet at the Starbucks near you?"); }}
+          onClick={() => setNewMessage("How about we meet at the Starbucks near you?")}
           className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border text-xs font-medium rounded-full hover:bg-surface-hover transition"
         >
           <MapPin className="w-3.5 h-3.5" />
           Suggest Meetup Spot
         </button>
         <button
-          onClick={() => { setNewMessage("Would you take $___? "); }}
+          onClick={() => setNewMessage("Would you take $___? ")}
           className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border text-xs font-medium rounded-full hover:bg-surface-hover transition"
         >
           <DollarSign className="w-3.5 h-3.5" />
@@ -129,7 +191,8 @@ export default function ChatPage() {
           />
           <button
             onClick={sendMsg}
-            className="w-10 h-10 bg-primary rounded-full flex items-center justify-center hover:bg-primary-hover transition"
+            disabled={sending || !newMessage.trim()}
+            className="w-10 h-10 bg-primary rounded-full flex items-center justify-center hover:bg-primary-hover transition disabled:opacity-50"
           >
             <Send className="w-5 h-5 text-white" />
           </button>
@@ -146,11 +209,13 @@ export default function ChatPage() {
               </div>
               <h2 className="text-lg font-bold text-text-primary mb-2">Confirm Exchange</h2>
               <p className="text-sm text-text-secondary mb-5">
-                Both you and the seller need to confirm. The deposit will be released once both confirm.
+                Both you and the other party need to confirm. The deposit will be released once both confirm.
               </p>
               <button
-                onClick={() => {
-                  addReply(conversation.id, "✅ I confirm the exchange is complete!");
+                onClick={async () => {
+                  await addReply(id as string, "I confirm the exchange is complete!");
+                  const msgs = await getMessages(id as string);
+                  setMessages(msgs);
                   setShowMeetupConfirm(false);
                 }}
                 className="w-full py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent-hover transition mb-2"

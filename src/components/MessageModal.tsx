@@ -38,9 +38,9 @@ export default function MessageModal({
 
   if (!isOpen) return null;
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!message.trim()) return;
-    const id = sendMessage({
+    const id = await sendMessage({
       recipientId: recipient.id,
       recipientName: recipient.name,
       recipientAvatar: recipient.avatar,

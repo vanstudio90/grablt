@@ -1,10 +1,37 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
-import { conversations as defaultConversations, type Conversation, type Message } from "./data";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { supabase } from "./supabase";
+import { useAuth } from "./AuthContext";
+
+export interface DbConversation {
+  id: string;
+  listing_id: string | null;
+  buyer_id: string;
+  seller_id: string;
+  last_message: string;
+  last_message_at: string;
+  other_user_name: string;
+  other_user_avatar: string;
+  listing_title: string;
+  listing_image: string;
+  listing_price: number;
+  unread: number;
+}
+
+export interface DbMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  recipient_id: string;
+  text: string;
+  created_at: string;
+  read: boolean;
+}
 
 interface MessageContextType {
-  conversations: Conversation[];
+  conversations: DbConversation[];
+  loading: boolean;
   sendMessage: (opts: {
     recipientId: string;
     recipientName: string;
@@ -14,9 +41,10 @@ interface MessageContextType {
     listingTitle?: string;
     listingImage?: string;
     listingPrice?: number;
-  }) => string; // returns conversation id
-  getConversation: (id: string) => Conversation | undefined;
-  addReply: (conversationId: string, text: string) => void;
+  }) => Promise<string>;
+  getMessages: (conversationId: string) => Promise<DbMessage[]>;
+  addReply: (conversationId: string, text: string) => Promise<void>;
+  refreshConversations: () => Promise<void>;
 }
 
 const MessageContext = createContext<MessageContextType | null>(null);
@@ -28,102 +56,170 @@ export function useMessages() {
 }
 
 export function MessageProvider({ children }: { children: ReactNode }) {
-  const [conversations, setConversations] = useState<Conversation[]>(defaultConversations);
+  const [conversations, setConversations] = useState<DbConversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  const sendMessage: MessageContextType["sendMessage"] = ({
-    recipientId,
-    recipientName,
-    recipientAvatar,
-    text,
-    listingId,
-    listingTitle,
-    listingImage,
-    listingPrice,
-  }) => {
-    // Check if conversation with this user already exists
-    const existing = conversations.find((c) => c.otherUser.id === recipientId);
+  const refreshConversations = useCallback(async () => {
+    if (!user) { setConversations([]); setLoading(false); return; }
 
-    if (existing) {
-      // Add message to existing conversation
-      const newMsg: Message = {
-        id: `m${Date.now()}`,
-        senderId: "me",
-        text,
-        timestamp: "Just now",
-      };
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === existing.id
-            ? {
-                ...c,
-                messages: [...c.messages, newMsg],
-                lastMessage: text,
-                lastMessageTime: "Just now",
-                unread: 0,
-              }
-            : c
-        )
-      );
-      return existing.id;
+    // Get all conversations where user is buyer or seller
+    const { data: convos } = await supabase
+      .from("conversations")
+      .select("*")
+      .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+      .order("last_message_at", { ascending: false });
+
+    if (!convos) { setLoading(false); return; }
+
+    // For each conversation, get the other user's profile
+    const enriched: DbConversation[] = [];
+    for (const c of convos) {
+      const otherUserId = c.buyer_id === user.id ? c.seller_id : c.buyer_id;
+      const { data: profile } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", otherUserId).single();
+
+      // Get listing info if exists
+      let listingTitle = "General inquiry";
+      let listingImage = "";
+      let listingPrice = 0;
+      if (c.listing_id) {
+        const { data: listing } = await supabase.from("listings").select("title, images, price").eq("id", c.listing_id).single();
+        if (listing) {
+          listingTitle = listing.title;
+          listingImage = listing.images?.[0] || "";
+          listingPrice = Number(listing.price);
+        }
+      }
+
+      // Count unread
+      const { count } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .eq("conversation_id", c.id)
+        .eq("recipient_id", user.id)
+        .eq("read", false);
+
+      enriched.push({
+        id: c.id,
+        listing_id: c.listing_id,
+        buyer_id: c.buyer_id,
+        seller_id: c.seller_id,
+        last_message: c.last_message || "",
+        last_message_at: c.last_message_at,
+        other_user_name: profile?.full_name || "User",
+        other_user_avatar: profile?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200",
+        listing_title: listingTitle,
+        listing_image: listingImage,
+        listing_price: listingPrice,
+        unread: count || 0,
+      });
     }
 
-    // Create new conversation
-    const newConvId = `c${Date.now()}`;
-    const newConv: Conversation = {
-      id: newConvId,
-      listing: {
-        id: listingId || "",
-        title: listingTitle || "General inquiry",
-        image: listingImage || recipientAvatar,
-        price: listingPrice || 0,
-      },
-      otherUser: {
-        id: recipientId,
-        name: recipientName,
-        avatar: recipientAvatar,
-      },
-      lastMessage: text,
-      lastMessageTime: "Just now",
-      unread: 0,
-      messages: [
-        {
-          id: `m${Date.now()}`,
-          senderId: "me",
-          text,
-          timestamp: "Just now",
-        },
-      ],
-    };
+    setConversations(enriched);
+    setLoading(false);
+  }, [user]);
 
-    setConversations((prev) => [newConv, ...prev]);
-    return newConvId;
+  useEffect(() => {
+    refreshConversations();
+  }, [refreshConversations]);
+
+  const sendMessage: MessageContextType["sendMessage"] = async ({
+    recipientId, recipientName, recipientAvatar, text, listingId, listingTitle, listingImage, listingPrice,
+  }) => {
+    if (!user) return "";
+
+    // Find existing conversation between these two users about this listing
+    const { data: existing } = await supabase
+      .from("conversations")
+      .select("id")
+      .or(`and(buyer_id.eq.${user.id},seller_id.eq.${recipientId}),and(buyer_id.eq.${recipientId},seller_id.eq.${user.id})`)
+      .limit(1)
+      .single();
+
+    let convId: string;
+
+    if (existing) {
+      convId = existing.id;
+    } else {
+      // Create new conversation
+      const { data: newConv } = await supabase.from("conversations").insert({
+        listing_id: listingId?.replace("db-", "") || null,
+        buyer_id: user.id,
+        seller_id: recipientId,
+        last_message: text,
+        last_message_at: new Date().toISOString(),
+      }).select("id").single();
+
+      convId = newConv?.id || "";
+    }
+
+    if (!convId) return "";
+
+    // Insert the message
+    await supabase.from("messages").insert({
+      conversation_id: convId,
+      sender_id: user.id,
+      recipient_id: recipientId,
+      listing_id: listingId?.replace("db-", "") || null,
+      text,
+    });
+
+    // Update conversation last message
+    await supabase.from("conversations").update({
+      last_message: text,
+      last_message_at: new Date().toISOString(),
+    }).eq("id", convId);
+
+    await refreshConversations();
+    return convId;
   };
 
-  const getConversation = (id: string) => conversations.find((c) => c.id === id);
+  const getMessages = async (conversationId: string): Promise<DbMessage[]> => {
+    const { data } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true });
 
-  const addReply = (conversationId: string, text: string) => {
-    const newMsg: Message = {
-      id: `m${Date.now()}`,
-      senderId: "me",
+    // Mark as read
+    if (user) {
+      await supabase
+        .from("messages")
+        .update({ read: true })
+        .eq("conversation_id", conversationId)
+        .eq("recipient_id", user.id)
+        .eq("read", false);
+    }
+
+    return (data as DbMessage[]) || [];
+  };
+
+  const addReply = async (conversationId: string, text: string) => {
+    if (!user) return;
+
+    // Find who the other person is
+    const conv = conversations.find((c) => c.id === conversationId);
+    if (!conv) return;
+
+    const recipientId = conv.buyer_id === user.id ? conv.seller_id : conv.buyer_id;
+
+    await supabase.from("messages").insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      recipient_id: recipientId,
       text,
-      timestamp: "Just now",
-    };
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === conversationId
-          ? {
-              ...c,
-              messages: [...c.messages, newMsg],
-              lastMessage: text,
-              lastMessageTime: "Just now",
-            }
-          : c
-      )
-    );
+    });
+
+    await supabase.from("conversations").update({
+      last_message: text,
+      last_message_at: new Date().toISOString(),
+    }).eq("id", conversationId);
+
+    await refreshConversations();
   };
 
   return (
-    <MessageContext.Provider value={{ conversations, sendMessage, getConversation, addReply }}>
+    <MessageContext.Provider value={{ conversations, loading, sendMessage, getMessages, addReply, refreshConversations }}>
       {children}
     </MessageContext.Provider>
   );
