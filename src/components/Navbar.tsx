@@ -70,7 +70,7 @@ export default function Navbar() {
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold">
-              <span className="text-primary">Buy</span> <span className="text-text-primary">or</span> <span className="text-primary">Meet</span>
+              <span className="text-primary">Buy</span><span className="text-text-primary">or</span><span className="text-primary">Meet</span>
             </span>
           </Link>
 

@@ -32,9 +32,9 @@ export default function HowItWorksPage() {
         <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
           <ShieldCheck className="w-8 h-8 text-white" />
         </div>
-        <h1 className="text-3xl font-bold text-text-primary mb-2">How Buy or Meet Protects You</h1>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">How BuyorMeet Protects You</h1>
         <p className="text-text-secondary max-w-xl mx-auto">
-          Every transaction on Buy or Meet is protected by our multi-layer security system.
+          Every transaction on BuyorMeet is protected by our multi-layer security system.
           Buy and sell locally without worry.
         </p>
       </div>
@@ -79,7 +79,7 @@ export default function HowItWorksPage() {
             <h3 className="font-bold text-text-primary">Escrow Protection</h3>
           </div>
           <p className="text-sm text-text-secondary">
-            Money is held by Stripe (a licensed payment processor), not by Buy or Meet.
+            Money is held by Stripe (a licensed payment processor), not by BuyorMeet.
             Neither party can access funds until both confirm the exchange.
             Deposits are <strong>always refundable</strong> if the item isn&apos;t as described.
           </p>
