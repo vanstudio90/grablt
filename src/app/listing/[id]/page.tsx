@@ -313,7 +313,7 @@ export default function ListingDetail() {
 
             {/* How It Works */}
             <div className="bg-surface rounded-2xl border border-border p-5">
-              <h3 className="font-semibold text-text-primary mb-4">How GrabLt Works</h3>
+              <h3 className="font-semibold text-text-primary mb-4">How Buy or Meet Works</h3>
               <div className="space-y-4">
                 {[
                   { step: "1", title: "Reserve with Deposit", desc: "Place a small deposit to reserve the item." },

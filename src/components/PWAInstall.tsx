@@ -47,7 +47,7 @@ export default function PWAInstall() {
           <Download className="w-5 h-5 text-white" />
         </div>
         <div className="flex-1">
-          <p className="font-semibold text-sm text-text-primary">Install GrabLt</p>
+          <p className="font-semibold text-sm text-text-primary">Install Buy or Meet</p>
           <p className="text-xs text-text-secondary mt-0.5">
             Add to your home screen for the best experience
           </p>

@@ -60,7 +60,7 @@ export default function SignupPage() {
             <ShieldCheck className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-text-primary">Create your account</h1>
-          <p className="text-sm text-text-secondary mt-1">Join GrabLt and start buying & selling locally</p>
+          <p className="text-sm text-text-secondary mt-1">Join Buy or Meet and start buying & selling locally</p>
         </div>
 
         <form onSubmit={handleSignup} className="bg-surface rounded-2xl border border-border p-6 space-y-4">

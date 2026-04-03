@@ -38,7 +38,7 @@ export default function LoginPage() {
             <ShieldCheck className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-text-primary">Welcome back</h1>
-          <p className="text-sm text-text-secondary mt-1">Log in to your GrabLt account</p>
+          <p className="text-sm text-text-secondary mt-1">Log in to your Buy or Meet account</p>
         </div>
 
         <form onSubmit={handleLogin} className="bg-surface rounded-2xl border border-border p-6 space-y-4">

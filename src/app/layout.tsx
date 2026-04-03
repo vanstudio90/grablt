@@ -8,7 +8,7 @@ import { MessageProvider } from "@/lib/MessageContext";
 import { AuthProvider } from "@/lib/AuthContext";
 
 export const metadata: Metadata = {
-  title: "GrabLt - Local Marketplace with Secure Meetups",
+  title: "Buy or Meet - Local Marketplace with Secure Meetups",
   description: "Buy and sell locally with deposit protection. Meet safely, trade confidently.",
   manifest: "/manifest.json",
   robots: {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "GrabLt",
+    title: "Buy or Meet",
   },
 };
 

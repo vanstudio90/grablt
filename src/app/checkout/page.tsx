@@ -20,7 +20,7 @@ export default function CheckoutPage() {
         </div>
         <h1 className="text-2xl font-bold text-text-primary mb-2">Deposits Placed!</h1>
         <p className="text-text-secondary mb-2">
-          Order #GBL-{Math.random().toString(36).substring(2, 8).toUpperCase()}
+          Order #BOM-{Math.random().toString(36).substring(2, 8).toUpperCase()}
         </p>
         <p className="text-sm text-text-secondary max-w-sm mx-auto mb-6">
           Your items are now reserved. Message each seller to arrange meetup times and locations.

@@ -40,7 +40,7 @@ export default function TransactionPage() {
   const [showQR, setShowQR] = useState(false);
   const [showNoShow, setShowNoShow] = useState(false);
 
-  const releaseCode = "GBL-" + (listing.id + "X7K9").toUpperCase().slice(0, 6);
+  const releaseCode = "BOM-" + (listing.id + "X7K9").toUpperCase().slice(0, 6);
 
   // Simulate hold timer countdown when in holding state
   useEffect(() => {

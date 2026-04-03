@@ -37,7 +37,7 @@ export default function CreateListing() {
         </div>
         <h1 className="text-2xl font-bold text-text-primary mb-2">Listed!</h1>
         <p className="text-text-secondary">
-          Your item is now live on GrabLt. Buyers can reserve it with a deposit.
+          Your item is now live on Buy or Meet. Buyers can reserve it with a deposit.
         </p>
         <div className="flex gap-3 justify-center mt-6">
           <Link href="/" className="px-6 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover transition">

@@ -69,8 +69,8 @@ export default function Navbar() {
             <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-text-primary">
-              Grab<span className="text-primary">Lt</span>
+            <span className="text-xl font-bold">
+              <span className="text-primary">Buy</span> <span className="text-text-primary">or</span> <span className="text-primary">Meet</span>
             </span>
           </Link>
 
