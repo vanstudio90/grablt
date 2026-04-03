@@ -1,20 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
   Camera,
-  Plus,
   MapPin,
   DollarSign,
   Info,
   ShieldCheck,
   X,
   Truck,
-  Package,
+  Loader2,
 } from "lucide-react";
 import { sidebarCategories } from "@/lib/data";
+import { useAuth } from "@/lib/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 export default function CreateListing() {
   const [images, setImages] = useState<string[]>([]);
@@ -23,11 +25,48 @@ export default function CreateListing() {
   const [category, setCategory] = useState("");
   const [condition, setCondition] = useState("");
   const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("Los Angeles, CA");
   const [offerShipping, setOfferShipping] = useState(false);
   const [shippingPrice, setShippingPrice] = useState("");
   const [posted, setPosted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { user } = useAuth();
+  const router = useRouter();
 
   const depositAmount = price ? Math.max(5, Math.round(Number(price) * 0.1)) : 0;
+
+  const handlePost = async () => {
+    if (!user) { router.push("/login"); return; }
+    if (!title) { setError("Please add a title"); return; }
+    if (!category) { setError("Please select a category"); return; }
+    if (!condition) { setError("Please select a condition"); return; }
+
+    setError("");
+    setLoading(true);
+
+    const { error: dbError } = await supabase.from("listings").insert({
+      user_id: user.id,
+      title,
+      price: Number(price) || 0,
+      images: images.length > 0 ? images : ["https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800"],
+      category,
+      condition,
+      description,
+      location,
+      shipping_available: offerShipping,
+      shipping_price: offerShipping ? Number(shippingPrice) || 0 : 0,
+      status: "available",
+    });
+
+    setLoading(false);
+
+    if (dbError) {
+      setError(dbError.message);
+    } else {
+      setPosted(true);
+    }
+  };
 
   if (posted) {
     return (
@@ -43,7 +82,7 @@ export default function CreateListing() {
           <Link href="/" className="px-6 py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover transition">
             View Marketplace
           </Link>
-          <button onClick={() => setPosted(false)} className="px-6 py-2.5 border border-border rounded-xl font-medium hover:bg-surface-hover transition">
+          <button onClick={() => { setPosted(false); setTitle(""); setPrice(""); setDescription(""); setCategory(""); setCondition(""); setImages([]); }} className="px-6 py-2.5 border border-border rounded-xl font-medium hover:bg-surface-hover transition">
             List Another
           </button>
         </div>
@@ -54,11 +93,20 @@ export default function CreateListing() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
       <Link href="/" className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary transition mb-4">
-        <ArrowLeft className="w-4 h-4" />
-        Back
+        <ArrowLeft className="w-4 h-4" /> Back
       </Link>
 
       <h1 className="text-2xl font-bold text-text-primary mb-6">Sell Something</h1>
+
+      {!user && (
+        <div className="bg-warning/10 border border-warning/20 rounded-xl p-4 mb-5 text-sm text-text-secondary">
+          You need to <Link href="/login" className="text-primary font-medium hover:underline">log in</Link> to post a listing.
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-danger/10 border border-danger/20 rounded-xl p-3 mb-5 text-sm text-danger">{error}</div>
+      )}
 
       <div className="space-y-5">
         {/* Photos */}
@@ -68,16 +116,21 @@ export default function CreateListing() {
             {images.map((img, i) => (
               <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-border">
                 <img src={img} alt="" className="w-full h-full object-cover" />
-                <button
-                  onClick={() => setImages(images.filter((_, idx) => idx !== i))}
-                  className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center"
-                >
+                <button onClick={() => setImages(images.filter((_, idx) => idx !== i))} className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center">
                   <X className="w-3 h-3 text-white" />
                 </button>
               </div>
             ))}
             <button
-              onClick={() => setImages([...images, `https://images.unsplash.com/photo-${Date.now()}?w=400`])}
+              onClick={() => {
+                const demoImages = [
+                  "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400",
+                  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
+                  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+                  "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400",
+                ];
+                setImages([...images, demoImages[images.length % demoImages.length]]);
+              }}
               className="aspect-square rounded-xl border-2 border-dashed border-border hover:border-primary/30 flex flex-col items-center justify-center gap-1 transition"
             >
               <Camera className="w-6 h-6 text-text-tertiary" />
@@ -99,14 +152,7 @@ export default function CreateListing() {
         {/* Title */}
         <div className="bg-surface rounded-2xl border border-border p-5">
           <label className="font-semibold text-text-primary mb-2 block">Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="What are you selling?"
-            className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-            maxLength={100}
-          />
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What are you selling?" className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" maxLength={100} />
           <p className="text-xs text-text-tertiary mt-1 text-right">{title.length}/100</p>
         </div>
 
@@ -115,14 +161,7 @@ export default function CreateListing() {
           <label className="font-semibold text-text-primary mb-2 block">Price</label>
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
-            <input
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="0"
-              className="w-full pl-10 pr-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-              min="0"
-            />
+            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" className="w-full pl-10 pr-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" min="0" />
           </div>
           {Number(price) > 0 && (
             <div className="mt-3 flex items-center gap-2 text-xs text-primary bg-primary-light px-3 py-2 rounded-lg">
@@ -130,34 +169,20 @@ export default function CreateListing() {
               Buyers will reserve with a <strong>${depositAmount}</strong> deposit (10% of price)
             </div>
           )}
-          <label className="flex items-center gap-2 mt-3 cursor-pointer">
-            <input type="checkbox" className="rounded border-border text-primary focus:ring-primary" />
-            <span className="text-sm text-text-secondary">List as FREE</span>
-          </label>
         </div>
 
         {/* Category & Condition */}
         <div className="bg-surface rounded-2xl border border-border p-5 grid grid-cols-2 gap-4">
           <div>
             <label className="font-semibold text-text-primary mb-2 block text-sm">Category</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
-            >
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white">
               <option value="">Select category</option>
-              {sidebarCategories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
+              {sidebarCategories.map((c) => (<option key={c} value={c}>{c}</option>))}
             </select>
           </div>
           <div>
             <label className="font-semibold text-text-primary mb-2 block text-sm">Condition</label>
-            <select
-              value={condition}
-              onChange={(e) => setCondition(e.target.value)}
-              className="w-full px-3 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
-            >
+            <select value={condition} onChange={(e) => setCondition(e.target.value)} className="w-full px-3 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white">
               <option value="">Select condition</option>
               <option>New</option>
               <option>Like New</option>
@@ -170,13 +195,7 @@ export default function CreateListing() {
         {/* Description */}
         <div className="bg-surface rounded-2xl border border-border p-5">
           <label className="font-semibold text-text-primary mb-2 block">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe your item — condition, features, why you're selling..."
-            rows={5}
-            className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none"
-          />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your item — condition, features, why you're selling..." rows={5} className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition resize-none" />
         </div>
 
         {/* Location */}
@@ -184,16 +203,10 @@ export default function CreateListing() {
           <label className="font-semibold text-text-primary mb-2 block">Meetup Location</label>
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
-            <input
-              type="text"
-              placeholder="Enter neighborhood or zip code"
-              defaultValue="Los Angeles, CA"
-              className="w-full pl-10 pr-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-            />
+            <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Enter neighborhood or zip code" className="w-full pl-10 pr-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition" />
           </div>
           <p className="text-xs text-text-tertiary mt-2 flex items-center gap-1">
-            <Info className="w-3 h-3" />
-            Your exact address is never shown. Only the general area is visible.
+            <Info className="w-3 h-3" /> Your exact address is never shown. Only the general area is visible.
           </p>
         </div>
 
@@ -216,12 +229,7 @@ export default function CreateListing() {
                 <p className="text-xs text-text-tertiary">Ship the item to the buyer&apos;s address</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={offerShipping}
-                  onChange={(e) => setOfferShipping(e.target.checked)}
-                  className="sr-only peer"
-                />
+                <input type="checkbox" checked={offerShipping} onChange={(e) => setOfferShipping(e.target.checked)} className="sr-only peer" />
                 <div className="w-9 h-5 bg-border rounded-full peer peer-checked:bg-secondary transition after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition peer-checked:after:translate-x-4"></div>
               </label>
             </div>
@@ -230,16 +238,8 @@ export default function CreateListing() {
                 <label className="text-xs font-medium text-text-secondary mb-1 block">Shipping Cost</label>
                 <div className="relative w-40">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
-                  <input
-                    type="number"
-                    value={shippingPrice}
-                    onChange={(e) => setShippingPrice(e.target.value)}
-                    placeholder="15"
-                    min="0"
-                    className="w-full pl-8 pr-4 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
+                  <input type="number" value={shippingPrice} onChange={(e) => setShippingPrice(e.target.value)} placeholder="15" min="0" className="w-full pl-8 pr-4 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
                 </div>
-                <p className="text-xs text-text-tertiary mt-1">Set to $0 for free shipping</p>
               </div>
             )}
           </div>
@@ -247,10 +247,12 @@ export default function CreateListing() {
 
         {/* Submit */}
         <button
-          onClick={() => setPosted(true)}
-          className="w-full py-4 bg-primary text-white rounded-2xl font-semibold text-lg hover:bg-primary-hover transition"
+          onClick={handlePost}
+          disabled={loading || !user}
+          className="w-full py-4 bg-primary text-white rounded-2xl font-semibold text-lg hover:bg-primary-hover transition disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          Post Listing
+          {loading && <Loader2 className="w-5 h-5 animate-spin" />}
+          {loading ? "Posting..." : "Post Listing"}
         </button>
       </div>
     </div>

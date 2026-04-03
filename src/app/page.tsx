@@ -1,14 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapPin, SlidersHorizontal, ChevronDown } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
-import { listings } from "@/lib/data";
+import { listings as demoListings, type Listing } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
+  const [dbListings, setDbListings] = useState<Listing[]>([]);
+
+  // Load user-created listings from Supabase
+  useEffect(() => {
+    async function loadDbListings() {
+      const { data } = await supabase
+        .from("listings")
+        .select("*, profiles(full_name, avatar_url)")
+        .eq("status", "available")
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        const mapped: Listing[] = data.map((l: Record<string, unknown>) => ({
+          id: `db-${l.id}`,
+          title: l.title as string,
+          price: Number(l.price),
+          images: (l.images as string[]) || [],
+          category: l.category as string,
+          condition: l.condition as string,
+          description: (l.description as string) || "",
+          location: (l.location as string) || "Los Angeles, CA",
+          distance: "Nearby",
+          postedAt: getTimeAgo(l.created_at as string),
+          seller: {
+            id: l.user_id as string,
+            name: (l.profiles as Record<string, string>)?.full_name || "User",
+            avatar: (l.profiles as Record<string, string>)?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200",
+            rating: 5.0,
+            reviews: 0,
+            joined: "New",
+            responseTime: "Usually responds quickly",
+          },
+          saved: false,
+          depositAmount: Math.max(5, Math.round(Number(l.price) * 0.1)),
+          status: "available" as const,
+          shippingAvailable: (l.shipping_available as boolean) || false,
+          shippingPrice: Number(l.shipping_price) || 0,
+          deliveryOptions: (l.shipping_available as boolean) ? ["pickup", "shipping"] : ["pickup"],
+        }));
+        setDbListings(mapped);
+      }
+    }
+    loadDbListings();
+  }, []);
+
+  // DB listings first, then demo listings
+  const allListings = [...dbListings, ...demoListings];
 
   return (
     <div className="px-4 py-6">
@@ -37,7 +85,7 @@ export default function Home() {
         <div>
           <h2 className="text-lg font-bold text-text-primary">Today&apos;s picks</h2>
           <p className="text-sm text-text-secondary">
-            <span className="font-semibold text-text-primary">{listings.length}</span> listings near you
+            <span className="font-semibold text-text-primary">{allListings.length}</span> listings near you
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -90,10 +138,20 @@ export default function Home() {
 
       {/* Listings Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-        {listings.map((listing) => (
+        {allListings.map((listing) => (
           <ListingCard key={listing.id} listing={listing} />
         ))}
       </div>
     </div>
   );
+}
+
+function getTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hours ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} days ago`;
 }
