@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Send, CheckCircle2, MessageCircle } from "lucide-react";
+import { X, Send, CheckCircle2, MessageCircle, LogIn } from "lucide-react";
 import { useMessages } from "@/lib/MessageContext";
+import { useAuth } from "@/lib/AuthContext";
 
 interface MessageModalProps {
   isOpen: boolean;
@@ -34,12 +35,14 @@ export default function MessageModal({
   const [sent, setSent] = useState(false);
   const [convId, setConvId] = useState<string>("");
   const { sendMessage } = useMessages();
+  const { user } = useAuth();
   const router = useRouter();
 
   if (!isOpen) return null;
 
   const handleSend = async () => {
     if (!message.trim()) return;
+    if (!user) return;
     const id = await sendMessage({
       recipientId: recipient.id,
       recipientName: recipient.name,
@@ -68,9 +71,33 @@ export default function MessageModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4">
-      <div className="bg-surface rounded-t-3xl md:rounded-2xl w-full max-w-md shadow-xl">
-        {sent ? (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-4 pb-20 md:pb-4">
+      <div className="bg-surface rounded-t-3xl md:rounded-2xl w-full max-w-md shadow-xl max-h-[85vh] overflow-y-auto">
+        {!user ? (
+          <div className="p-6 text-center">
+            <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <LogIn className="w-7 h-7 text-primary" />
+            </div>
+            <h2 className="text-lg font-bold text-text-primary mb-1">Log in to message</h2>
+            <p className="text-sm text-text-secondary mb-5">
+              You need to be logged in to send messages to sellers.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { handleClose(); router.push("/login"); }}
+                className="flex-1 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-hover transition"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => { handleClose(); router.push("/signup"); }}
+                className="flex-1 py-3 border border-border rounded-xl font-medium hover:bg-surface-hover transition"
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
+        ) : sent ? (
           <div className="p-6 text-center">
             <div className="w-14 h-14 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-7 h-7 text-accent" />

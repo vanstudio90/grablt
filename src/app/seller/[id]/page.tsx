@@ -5,12 +5,19 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Star, MapPin, Calendar, ShieldCheck, Clock, MessageCircle } from "lucide-react";
 import { listings, getListingsBySeller } from "@/lib/data";
+import { generateDemoListings } from "@/lib/demoProducts";
 import ListingCard from "@/components/ListingCard";
 import MessageModal from "@/components/MessageModal";
 
+const demoListings = generateDemoListings();
+
 export default function SellerProfile() {
   const { id } = useParams();
-  const sellerListings = getListingsBySeller(id as string);
+  // Search both static and demo listings for the seller
+  let sellerListings = getListingsBySeller(id as string);
+  if (sellerListings.length === 0) {
+    sellerListings = demoListings.filter((l) => l.seller.id === id);
+  }
   const seller = sellerListings[0]?.seller;
   const [showMessageModal, setShowMessageModal] = useState(false);
 
@@ -44,7 +51,7 @@ export default function SellerProfile() {
                 <span className="text-text-tertiary">({seller.reviews} reviews)</span>
               </div>
               <div className="flex flex-wrap gap-4 mt-3 text-sm text-text-secondary">
-                <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> Los Angeles, CA</span>
+                <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {sellerListings[0]?.location || "Local"}</span>
                 <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> Joined {seller.joined}</span>
                 <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {seller.responseTime}</span>
                 <span className="flex items-center gap-1"><ShieldCheck className="w-4 h-4 text-primary" /> Verified Seller</span>
