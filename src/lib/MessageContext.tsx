@@ -128,7 +128,12 @@ export function MessageProvider({ children }: { children: ReactNode }) {
   }) => {
     if (!user) return "";
 
-    // Find existing conversation between these two users about this listing
+    const cleanListingId = listingId?.replace("db-", "") || null;
+    // Validate listing ID is a valid UUID if present, otherwise skip it
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const validListingId = cleanListingId && uuidRegex.test(cleanListingId) ? cleanListingId : null;
+
+    // Find existing conversation between these two users
     const { data: existing } = await supabase
       .from("conversations")
       .select("id")
@@ -142,27 +147,36 @@ export function MessageProvider({ children }: { children: ReactNode }) {
       convId = existing.id;
     } else {
       // Create new conversation
-      const { data: newConv } = await supabase.from("conversations").insert({
-        listing_id: listingId?.replace("db-", "") || null,
+      const { data: newConv, error: convError } = await supabase.from("conversations").insert({
+        listing_id: validListingId,
         buyer_id: user.id,
         seller_id: recipientId,
         last_message: text,
         last_message_at: new Date().toISOString(),
       }).select("id").single();
 
+      if (convError) {
+        console.error("Failed to create conversation:", convError);
+        return "";
+      }
       convId = newConv?.id || "";
     }
 
     if (!convId) return "";
 
     // Insert the message
-    await supabase.from("messages").insert({
+    const { error: msgError } = await supabase.from("messages").insert({
       conversation_id: convId,
       sender_id: user.id,
       recipient_id: recipientId,
-      listing_id: listingId?.replace("db-", "") || null,
+      listing_id: validListingId,
       text,
     });
+
+    if (msgError) {
+      console.error("Failed to send message:", msgError);
+      return "";
+    }
 
     // Update conversation last message
     await supabase.from("conversations").update({

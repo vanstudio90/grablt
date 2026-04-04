@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -22,12 +22,15 @@ import {
   ShoppingCart,
   Truck,
   Loader2,
+  Send,
 } from "lucide-react";
 import { listings, getListingsBySeller, type Listing } from "@/lib/data";
 import { generateDemoListings } from "@/lib/demoProducts";
 import ListingCard from "@/components/ListingCard";
 import MessageModal from "@/components/MessageModal";
 import { supabase } from "@/lib/supabase";
+import { useMessages } from "@/lib/MessageContext";
+import { useAuth } from "@/lib/AuthContext";
 
 const generatedListings = generateDemoListings();
 
@@ -47,6 +50,33 @@ export default function ListingDetail() {
   const [showMore, setShowMore] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping">("pickup");
+  const [quickSent, setQuickSent] = useState(false);
+  const [quickSending, setQuickSending] = useState(false);
+  const { sendMessage } = useMessages();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleAskIfAvailable = async () => {
+    if (!user) { router.push("/login"); return; }
+    if (!listing) return;
+    setQuickSending(true);
+    const text = `Hi, is the "${listing.title}" still available?`;
+    const convId = await sendMessage({
+      recipientId: listing.seller.id,
+      recipientName: listing.seller.name,
+      recipientAvatar: listing.seller.avatar,
+      text,
+      listingId: listing.id,
+      listingTitle: listing.title,
+      listingImage: listing.images[0],
+      listingPrice: listing.price,
+    });
+    setQuickSending(false);
+    if (convId) {
+      setQuickSent(true);
+      setTimeout(() => setQuickSent(false), 3000);
+    }
+  };
 
   // Scroll to top on mount
   useEffect(() => {
@@ -165,11 +195,12 @@ export default function ListingDetail() {
               </p>
 
               {/* FB-style action bar */}
-              <div className="flex items-center gap-2 mt-4">
-                <button onClick={() => setShowMessageModal(true)} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary text-white rounded-lg font-medium text-sm hover:bg-primary-hover transition">
-                  <MessageCircle className="w-5 h-5" />
-                  Message
-                </button>
+              <div className="flex flex-col gap-2 mt-4">
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setShowMessageModal(true)} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary text-white rounded-lg font-medium text-sm hover:bg-primary-hover transition">
+                    <MessageCircle className="w-5 h-5" />
+                    Message
+                  </button>
                 <button
                   onClick={() => setSaved(!saved)}
                   className="w-11 h-11 flex items-center justify-center border border-border rounded-lg hover:bg-surface-hover transition"
@@ -197,6 +228,24 @@ export default function ListingDetail() {
                     </div>
                   )}
                 </div>
+                </div>
+                <button
+                  onClick={handleAskIfAvailable}
+                  disabled={quickSending || quickSent}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium text-sm transition ${
+                    quickSent
+                      ? "bg-accent/10 text-accent border border-accent/30"
+                      : "bg-surface-secondary text-text-primary border border-border hover:bg-surface-hover"
+                  } disabled:opacity-70`}
+                >
+                  {quickSending ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
+                  ) : quickSent ? (
+                    <><CheckCircle2 className="w-4 h-4" /> Sent! &ldquo;Is this still available?&rdquo;</>
+                  ) : (
+                    <><Send className="w-4 h-4" /> Ask if Available</>
+                  )}
+                </button>
               </div>
 
               {/* Details section */}
@@ -413,6 +462,7 @@ export default function ListingDetail() {
         isOpen={showMessageModal}
         onClose={() => setShowMessageModal(false)}
         recipient={{ id: listing.seller.id, name: listing.seller.name, avatar: listing.seller.avatar }}
+        listingId={listing.id}
         listingTitle={listing.title}
         listingImage={listing.images[0]}
         listingPrice={listing.price}

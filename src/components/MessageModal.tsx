@@ -29,9 +29,7 @@ export default function MessageModal({
   listingImage,
   listingPrice,
 }: MessageModalProps) {
-  const [message, setMessage] = useState(
-    listingTitle ? `Hi, is the "${listingTitle}" still available?` : `Hi ${recipient.name}, I'd like to connect with you.`
-  );
+  const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
   const [convId, setConvId] = useState<string>("");
   const { sendMessage } = useMessages();
@@ -40,9 +38,12 @@ export default function MessageModal({
 
   if (!isOpen) return null;
 
+  const [sending, setSending] = useState(false);
+
   const handleSend = async () => {
     if (!message.trim()) return;
     if (!user) return;
+    setSending(true);
     const id = await sendMessage({
       recipientId: recipient.id,
       recipientName: recipient.name,
@@ -53,15 +54,16 @@ export default function MessageModal({
       listingImage,
       listingPrice,
     });
-    setConvId(id);
-    setSent(true);
+    setSending(false);
+    if (id) {
+      setConvId(id);
+      setSent(true);
+    }
   };
 
   const handleClose = () => {
     setSent(false);
-    setMessage(
-      listingTitle ? `Hi, is the "${listingTitle}" still available?` : `Hi ${recipient.name}, I'd like to connect with you.`
-    );
+    setMessage("");
     onClose();
   };
 
@@ -181,11 +183,11 @@ export default function MessageModal({
 
             <button
               onClick={handleSend}
-              disabled={!message.trim()}
+              disabled={!message.trim() || sending}
               className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-5 h-5" />
-              Send Message
+              {sending ? "Sending..." : "Send Message"}
             </button>
           </div>
         )}
