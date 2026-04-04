@@ -110,7 +110,7 @@ export default function ChatPage() {
 
       {/* Listing context */}
       {conversation.listing_title && conversation.listing_title !== "General inquiry" && (
-        <div className="px-4 py-2 bg-surface-secondary border-b border-border">
+        <Link href={`/listing/${conversation.listing_id}`} className="block px-4 py-2 bg-surface-secondary border-b border-border hover:bg-surface-hover transition">
           <div className="flex items-center gap-3">
             {conversation.listing_image && (
               <img src={conversation.listing_image} alt="" className="w-10 h-10 rounded-lg object-cover" />
@@ -122,7 +122,7 @@ export default function ChatPage() {
               </p>
             </div>
           </div>
-        </div>
+        </Link>
       )}
 
       {/* Messages */}
