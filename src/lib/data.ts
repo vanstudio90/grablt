@@ -68,6 +68,11 @@ export const sidebarCategories = [
   "Pet Supplies",
   "Sporting Goods",
   "Toys & Games",
+  "Jewelry & Accessories",
+  "Health & Beauty",
+  "Books & Movies",
+  "Collectibles",
+  "Furniture",
   "Buy and sell groups",
 ];
 

@@ -20,9 +20,14 @@ import {
   Loader2,
 } from "lucide-react";
 import ListingCard from "@/components/ListingCard";
-import { listings as demoListings, sidebarCategories, type Listing } from "@/lib/data";
+import { listings as originalListings, sidebarCategories, type Listing } from "@/lib/data";
+import { generateDemoListings } from "@/lib/demoProducts";
 import { supabase } from "@/lib/supabase";
 import { useLocation } from "@/lib/useLocation";
+
+// Generate once outside component
+const generatedListings = generateDemoListings();
+const demoListings = [...originalListings, ...generatedListings];
 
 export default function Home() {
   const [showFilters, setShowFilters] = useState(false);
@@ -52,13 +57,19 @@ export default function Home() {
 
   const allListings = [...dbListings, ...demoListings];
 
+  // Filter by location — match city or state in location string
+  const locLower = displayLocation.toLowerCase();
+  const localListings = allListings.filter((l) => l.location.toLowerCase().includes(locLower.split(",")[0].trim()));
+  const hasLocalResults = localListings.length >= 4;
+
   // Section data
-  const nearYou = allListings.slice(0, 8);
-  const trending = [...demoListings].sort(() => Math.random() - 0.5).slice(0, 4);
-  const recentlyListed = [...dbListings, ...demoListings.slice(0, 4)].slice(0, 8);
-  const shippable = allListings.filter((l) => l.shippingAvailable);
-  const freeStuff = allListings.filter((l) => l.price === 0);
+  const nearYou = hasLocalResults ? localListings.slice(0, 8) : allListings.slice(0, 8);
+  const trending = [...demoListings].sort((a, b) => b.seller.reviews - a.seller.reviews).slice(0, 4);
+  const recentlyListed = [...dbListings, ...demoListings.slice(0, 8)].slice(0, 8);
+  const shippable = allListings.filter((l) => l.shippingAvailable).slice(0, 8);
+  const freeStuff = allListings.filter((l) => l.price === 0).slice(0, 4);
   const verified = demoListings.filter((l) => l.seller.reviews > 20).slice(0, 4);
+  const popularAcross = [...demoListings].sort((a, b) => b.price - a.price).filter((l) => l.price > 0 && l.price < 5000).slice(0, 8);
 
   return (
     <div className="px-4 py-6 space-y-8">
@@ -239,7 +250,7 @@ export default function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-          {demoListings.slice(10, 18).map((l) => <ListingCard key={`p-${l.id}`} listing={l} />)}
+          {popularAcross.map((l) => <ListingCard key={`p-${l.id}`} listing={l} />)}
         </div>
       </section>
 

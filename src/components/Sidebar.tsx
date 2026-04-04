@@ -32,6 +32,11 @@ import {
   Trophy,
   Gamepad2,
   Users,
+  Gem,
+  Sparkles,
+  BookOpen,
+  Star,
+  Armchair,
 } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "@/lib/useLocation";
@@ -64,6 +69,11 @@ const categoryItems = [
   { label: "Pet Supplies", icon: PawPrint },
   { label: "Sporting Goods", icon: Trophy },
   { label: "Toys & Games", icon: Gamepad2 },
+  { label: "Jewelry & Accessories", icon: Gem },
+  { label: "Health & Beauty", icon: Sparkles },
+  { label: "Books & Movies", icon: BookOpen },
+  { label: "Collectibles", icon: Star },
+  { label: "Furniture", icon: Armchair },
   { label: "Buy and sell groups", icon: Users },
 ];
 
