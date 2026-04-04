@@ -17,6 +17,7 @@ export interface DbConversation {
   listing_image: string;
   listing_price: number;
   unread: number;
+  isLocal?: boolean;
 }
 
 export interface DbMessage {
@@ -55,6 +56,36 @@ export function useMessages() {
   return ctx;
 }
 
+// Helper: check if a seller ID is a real Supabase UUID
+function isRealUserId(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
+
+// Local storage helpers for demo conversations
+function getLocalConversations(): DbConversation[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem("bom_local_convos") || "[]");
+  } catch { return []; }
+}
+
+function setLocalConversations(convos: DbConversation[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("bom_local_convos", JSON.stringify(convos));
+}
+
+function getLocalMessages(): DbMessage[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem("bom_local_msgs") || "[]");
+  } catch { return []; }
+}
+
+function setLocalMessages(msgs: DbMessage[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("bom_local_msgs", JSON.stringify(msgs));
+}
+
 export function MessageProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<DbConversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,59 +94,64 @@ export function MessageProvider({ children }: { children: ReactNode }) {
   const refreshConversations = useCallback(async () => {
     if (!user) { setConversations([]); setLoading(false); return; }
 
-    // Get all conversations where user is buyer or seller
+    // 1. Get DB conversations
     const { data: convos } = await supabase
       .from("conversations")
       .select("*")
       .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
       .order("last_message_at", { ascending: false });
 
-    if (!convos) { setLoading(false); return; }
-
-    // For each conversation, get the other user's profile
     const enriched: DbConversation[] = [];
-    for (const c of convos) {
-      const otherUserId = c.buyer_id === user.id ? c.seller_id : c.buyer_id;
-      const { data: profile } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", otherUserId).single();
 
-      // Get listing info if exists
-      let listingTitle = "General inquiry";
-      let listingImage = "";
-      let listingPrice = 0;
-      if (c.listing_id) {
-        const { data: listing } = await supabase.from("listings").select("title, images, price").eq("id", c.listing_id).single();
-        if (listing) {
-          listingTitle = listing.title;
-          listingImage = listing.images?.[0] || "";
-          listingPrice = Number(listing.price);
+    if (convos) {
+      for (const c of convos) {
+        const otherUserId = c.buyer_id === user.id ? c.seller_id : c.buyer_id;
+        const { data: profile } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", otherUserId).single();
+
+        let listingTitle = "General inquiry";
+        let listingImage = "";
+        let listingPrice = 0;
+        if (c.listing_id) {
+          const { data: listing } = await supabase.from("listings").select("title, images, price").eq("id", c.listing_id).single();
+          if (listing) {
+            listingTitle = listing.title;
+            listingImage = listing.images?.[0] || "";
+            listingPrice = Number(listing.price);
+          }
         }
+
+        const { count } = await supabase
+          .from("messages")
+          .select("*", { count: "exact", head: true })
+          .eq("conversation_id", c.id)
+          .eq("recipient_id", user.id)
+          .eq("read", false);
+
+        enriched.push({
+          id: c.id,
+          listing_id: c.listing_id,
+          buyer_id: c.buyer_id,
+          seller_id: c.seller_id,
+          last_message: c.last_message || "",
+          last_message_at: c.last_message_at,
+          other_user_name: profile?.full_name || "User",
+          other_user_avatar: profile?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200",
+          listing_title: listingTitle,
+          listing_image: listingImage,
+          listing_price: listingPrice,
+          unread: count || 0,
+        });
       }
-
-      // Count unread
-      const { count } = await supabase
-        .from("messages")
-        .select("*", { count: "exact", head: true })
-        .eq("conversation_id", c.id)
-        .eq("recipient_id", user.id)
-        .eq("read", false);
-
-      enriched.push({
-        id: c.id,
-        listing_id: c.listing_id,
-        buyer_id: c.buyer_id,
-        seller_id: c.seller_id,
-        last_message: c.last_message || "",
-        last_message_at: c.last_message_at,
-        other_user_name: profile?.full_name || "User",
-        other_user_avatar: profile?.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200",
-        listing_title: listingTitle,
-        listing_image: listingImage,
-        listing_price: listingPrice,
-        unread: count || 0,
-      });
     }
 
-    setConversations(enriched);
+    // 2. Merge local (demo) conversations
+    const localConvos = getLocalConversations().filter((lc) => lc.buyer_id === user.id);
+
+    const all = [...enriched, ...localConvos].sort(
+      (a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
+    );
+
+    setConversations(all);
     setLoading(false);
   }, [user]);
 
@@ -128,12 +164,61 @@ export function MessageProvider({ children }: { children: ReactNode }) {
   }) => {
     if (!user) return "";
 
+    // Demo / static seller — store locally
+    if (!isRealUserId(recipientId)) {
+      const localConvos = getLocalConversations();
+      const localMsgs = getLocalMessages();
+
+      // Find existing local conversation with this seller
+      let conv = localConvos.find(
+        (c) => c.seller_id === recipientId && c.buyer_id === user.id
+      );
+
+      const now = new Date().toISOString();
+
+      if (!conv) {
+        conv = {
+          id: `local-${Date.now()}`,
+          listing_id: listingId || null,
+          buyer_id: user.id,
+          seller_id: recipientId,
+          last_message: text,
+          last_message_at: now,
+          other_user_name: recipientName,
+          other_user_avatar: recipientAvatar,
+          listing_title: listingTitle || "General inquiry",
+          listing_image: listingImage || "",
+          listing_price: listingPrice || 0,
+          unread: 0,
+          isLocal: true,
+        };
+        localConvos.push(conv);
+      } else {
+        conv.last_message = text;
+        conv.last_message_at = now;
+      }
+
+      localMsgs.push({
+        id: `lmsg-${Date.now()}`,
+        conversation_id: conv.id,
+        sender_id: user.id,
+        recipient_id: recipientId,
+        text,
+        created_at: now,
+        read: false,
+      });
+
+      setLocalConversations(localConvos);
+      setLocalMessages(localMsgs);
+      await refreshConversations();
+      return conv.id;
+    }
+
+    // Real Supabase user
     const cleanListingId = listingId?.replace("db-", "") || null;
-    // Validate listing ID is a valid UUID if present, otherwise skip it
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const validListingId = cleanListingId && uuidRegex.test(cleanListingId) ? cleanListingId : null;
 
-    // Find existing conversation between these two users
     const { data: existing } = await supabase
       .from("conversations")
       .select("id")
@@ -146,7 +231,6 @@ export function MessageProvider({ children }: { children: ReactNode }) {
     if (existing) {
       convId = existing.id;
     } else {
-      // Create new conversation
       const { data: newConv, error: convError } = await supabase.from("conversations").insert({
         listing_id: validListingId,
         buyer_id: user.id,
@@ -164,7 +248,6 @@ export function MessageProvider({ children }: { children: ReactNode }) {
 
     if (!convId) return "";
 
-    // Insert the message
     const { error: msgError } = await supabase.from("messages").insert({
       conversation_id: convId,
       sender_id: user.id,
@@ -178,7 +261,6 @@ export function MessageProvider({ children }: { children: ReactNode }) {
       return "";
     }
 
-    // Update conversation last message
     await supabase.from("conversations").update({
       last_message: text,
       last_message_at: new Date().toISOString(),
@@ -189,13 +271,18 @@ export function MessageProvider({ children }: { children: ReactNode }) {
   };
 
   const getMessages = async (conversationId: string): Promise<DbMessage[]> => {
+    // Local conversation
+    if (conversationId.startsWith("local-")) {
+      const localMsgs = getLocalMessages();
+      return localMsgs.filter((m) => m.conversation_id === conversationId);
+    }
+
     const { data } = await supabase
       .from("messages")
       .select("*")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
 
-    // Mark as read
     if (user) {
       await supabase
         .from("messages")
@@ -211,7 +298,32 @@ export function MessageProvider({ children }: { children: ReactNode }) {
   const addReply = async (conversationId: string, text: string) => {
     if (!user) return;
 
-    // Find who the other person is
+    // Local conversation
+    if (conversationId.startsWith("local-")) {
+      const localConvos = getLocalConversations();
+      const localMsgs = getLocalMessages();
+      const conv = localConvos.find((c) => c.id === conversationId);
+      if (!conv) return;
+
+      const now = new Date().toISOString();
+      localMsgs.push({
+        id: `lmsg-${Date.now()}`,
+        conversation_id: conversationId,
+        sender_id: user.id,
+        recipient_id: conv.seller_id,
+        text,
+        created_at: now,
+        read: false,
+      });
+      conv.last_message = text;
+      conv.last_message_at = now;
+
+      setLocalConversations(localConvos);
+      setLocalMessages(localMsgs);
+      await refreshConversations();
+      return;
+    }
+
     const conv = conversations.find((c) => c.id === conversationId);
     if (!conv) return;
 
