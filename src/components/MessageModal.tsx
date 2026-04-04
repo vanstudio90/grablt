@@ -32,13 +32,12 @@ export default function MessageModal({
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
   const [convId, setConvId] = useState<string>("");
+  const [sending, setSending] = useState(false);
   const { sendMessage } = useMessages();
   const { user } = useAuth();
   const router = useRouter();
 
   if (!isOpen) return null;
-
-  const [sending, setSending] = useState(false);
 
   const handleSend = async () => {
     if (!message.trim()) return;
