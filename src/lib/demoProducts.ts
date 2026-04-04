@@ -479,6 +479,168 @@ const avatars = [
   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200",
 ];
 
+// ═══════════════════════════════════════
+// CHEAP / POPULAR items people actually search for
+// ═══════════════════════════════════════
+const cheapTemplates: Record<string, ProductTemplate> = {
+  Electronics: {
+    titles: [
+      "iPhone Charger Cable 3-Pack","Phone Case - Clear Protective","USB-C Hub Adapter","Bluetooth Speaker - Portable",
+      "Wireless Mouse + Keyboard Combo","HDMI Cable 6ft","Ring Doorbell - Used","Power Bank 20000mAh",
+      "AirPods Case - Silicone","Smart Plug 4-Pack","LED Strip Lights 50ft","Roku Streaming Stick",
+      "Webcam HD 1080p","USB Flash Drive 128GB","Car Phone Mount","Dash Cam - Front Only",
+      "Old iPad Air 2 - Works Great","Android Tablet 10\" - Budget","Portable Monitor 15.6\"","Smart Watch - Fitness Tracker",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800",
+      "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=800",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800",
+      "https://images.unsplash.com/photo-1546054454-aa26e2b734c7?w=800",
+      "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=800",
+    ],
+    prices: [8,12,20,25,30,5,60,18,8,25,15,25,20,10,12,45,80,70,95,35],
+    conditions: ["New","Like New","New","Good","New"],
+    descriptions: ["Works great, no issues. Selling because I don't need it anymore. Cash or card."],
+    shippable: true,
+  },
+  Apparel: {
+    titles: [
+      "T-Shirts Bundle - 5 Pack Size L","Jeans - Levi's 511 Slim 32x30","Winter Gloves - Touchscreen","Baseball Cap - Nike Dri-Fit",
+      "Hoodie - Champion Reverse Weave","Dress Shirts Lot - Medium (4)","Sunglasses - Polarized UV400","Running Shoes Size 10 - Brooks",
+      "Beanie - Carhartt Knit","Belt - Genuine Leather Brown","Socks Pack - 12 Pair Athletic","Tank Tops - 3 Pack Women's S",
+      "Sandals - Birkenstock Size 8","Rain Jacket - Columbia","Scarf - Cashmere Blend","Work Boots - Timberland Size 11",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800",
+      "https://images.unsplash.com/photo-1542272604-787c3835535d?w=800",
+      "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800",
+      "https://images.unsplash.com/photo-1600269452121-4f2416e55c28?w=800",
+    ],
+    prices: [20,25,10,15,30,35,12,40,15,18,10,12,45,35,20,60],
+    conditions: ["Good","Good","New","Like New","Good"],
+    descriptions: ["Clean, good condition. Pet and smoke free home. What you see is what you get."],
+    shippable: true,
+  },
+  "Home Goods": {
+    titles: [
+      "Plates Set - 8 Piece White","Coffee Maker - Mr. Coffee 12 Cup","Throw Blanket - Sherpa Fleece","Cutting Board Set - Bamboo 3pc",
+      "Towel Set - 6 Piece Bath","Storage Bins - Set of 6","Picture Frames - 5 Pack","Candles - Yankee Candle Lot (4)",
+      "Shower Curtain + Liner","Kitchen Knife Set - 6 Piece","Hangers - 50 Pack Velvet","Laundry Basket - Collapsible",
+      "Wall Clock - Modern 12\"","Trash Can - Step Sensor 13 Gal","Dish Drying Rack","Bathroom Organizer Set",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800",
+      "https://images.unsplash.com/photo-1585515320310-259814833e62?w=800",
+      "https://images.unsplash.com/photo-1600585152220-90363fe7e115?w=800",
+      "https://images.unsplash.com/photo-1558317374-067fb5f30001?w=800",
+    ],
+    prices: [15,20,18,12,22,15,10,20,8,25,12,10,15,30,18,12],
+    conditions: ["Good","Good","New","Like New","Good"],
+    descriptions: ["In good shape. Moving sale - everything must go. Pickup preferred."],
+    shippable: true,
+  },
+  Furniture: {
+    titles: [
+      "Folding Table - 6ft Plastic","Office Chair - Basic Mesh","Bookshelf - 5 Shelf Tall","End Table - Small Round",
+      "Futon - Black Frame + Mattress","TV Stand - 55\" Wide","Shoe Rack - 4 Tier","Coat Rack - Freestanding",
+      "Kids Desk + Chair Set","Plastic Storage Shelves","Folding Chairs Set of 4","Nightstand - 2 Drawer White",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800",
+      "https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?w=800",
+      "https://images.unsplash.com/photo-1589364231560-e0b3e75ab37a?w=800",
+      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800",
+    ],
+    prices: [35,45,30,20,80,40,15,25,50,20,40,35],
+    conditions: ["Good","Good","Fair","Good","Like New"],
+    descriptions: ["Functional, some wear. Great for apartment or dorm. You haul."],
+    shippable: false,
+  },
+  "Sporting Goods": {
+    titles: [
+      "Yoga Mat - Extra Thick","Jump Rope - Speed Cable","Resistance Bands Set - 5 Pack","Dumbbell Set - 2x 15lb",
+      "Basketball - Wilson Official","Soccer Ball - Adidas Size 5","Hiking Backpack 40L","Water Bottle - Hydro Flask 32oz",
+      "Roller Blades Size 9","Skateboard Deck - Blank","Tennis Balls - Can of 3","Camping Lantern - LED Rechargeable",
+      "Bike Helmet - Adult","Pull-Up Bar - Doorframe","Ab Roller Wheel","Fishing Tackle Box + Lures",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=800",
+      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+      "https://images.unsplash.com/photo-1502680390548-bdbac40e4a9f?w=800",
+      "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=800",
+    ],
+    prices: [15,8,12,25,20,18,35,25,30,20,5,18,22,20,12,25],
+    conditions: ["New","New","New","Good","Like New"],
+    descriptions: ["Ready to use. Great condition for the price. Pickup or meet nearby."],
+    shippable: true,
+  },
+  "Toys & Games": {
+    titles: [
+      "LEGO Set - 500 Piece Mixed Lot","Stuffed Animals Bundle - 10 pc","Play-Doh Set - 24 Colors","Nerf Gun - Rival Blaster",
+      "Puzzle - 1000 Piece Landscape","UNO Card Game - Brand New","Kids Scooter - 3 Wheel","Action Figures Lot - 15 Pieces",
+      "Barbie Dolls + Clothes Bundle","Hot Wheels Cars - 20 Pack","Baby Toys Bundle - 0-12 Month","Remote Control Car - Off Road",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=800",
+      "https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=800",
+      "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800",
+      "https://images.unsplash.com/photo-1611891487122-207579d67d98?w=800",
+    ],
+    prices: [20,10,8,15,12,5,25,15,18,12,10,20],
+    conditions: ["Good","Good","New","Like New","Good"],
+    descriptions: ["Kids outgrew these. All pieces included. Clean and ready for play."],
+    shippable: true,
+  },
+  "Garden & Outdoor": {
+    titles: [
+      "Garden Hose - 50ft Expandable","Plant Pots - Set of 5 Ceramic","Bird Feeder - Hanging Wood","Lawn Sprinkler - Oscillating",
+      "Outdoor Solar Lights - 8 Pack","Garden Kneeling Pad","Rake + Shovel + Hoe Set","Compost Bin - Tumbler Style",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
+      "https://images.unsplash.com/photo-1529543544089-28ab4e3ad822?w=800",
+      "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800",
+      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=800",
+    ],
+    prices: [18,20,12,10,22,8,25,35],
+    conditions: ["New","Good","New","Good","Like New"],
+    descriptions: ["Good condition. Yard sale item. Cash preferred."],
+    shippable: false,
+  },
+  "Pet Supplies": {
+    titles: [
+      "Dog Leash + Collar Set","Cat Food Bowls - Ceramic 2pk","Pet Bed - Medium Round","Dog Toys Bundle - 10 Pack",
+      "Fish Tank 10 Gallon + Filter","Cat Scratching Post","Dog Crate - Small 24\"","Pet Grooming Kit",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800",
+      "https://images.unsplash.com/photo-1545249390-6bdfa286032f?w=800",
+      "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800",
+      "https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=800",
+    ],
+    prices: [12,8,20,15,30,18,25,15],
+    conditions: ["New","Good","Like New","New","Good"],
+    descriptions: ["Pet outgrew it or we switched brands. Clean and in good shape."],
+    shippable: true,
+  },
+  Family: {
+    titles: [
+      "Baby Bottles Set - 6 Pack","Sippy Cups - 4 Pack","Baby Gate - Pressure Mount","Kids Backpack - School Size",
+      "Maternity Clothes Bundle - M","Diaper Bag - Simple Style","Baby Blankets - 3 Pack Muslin","Kids Rain Boots Size 10",
+    ],
+    images: [
+      "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800",
+      "https://images.unsplash.com/photo-1522771930-78848d9293e8?w=800",
+      "https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=800",
+      "https://images.unsplash.com/photo-1591088398332-8a7791972843?w=800",
+    ],
+    prices: [10,8,20,15,30,18,12,10],
+    conditions: ["Good","Good","Like New","Good","New"],
+    descriptions: ["Baby outgrew these. Washed and clean. Smoke-free home."],
+    shippable: true,
+  },
+};
+
 const firstNames = ["James","Maria","David","Sarah","Chris","Emma","Alex","Nina","Jordan","Tyler","Lisa","Ryan","Mike","Ashley","Jake","Sophia","Carlos","Priya","Wei","Omar"];
 const lastNames = ["Smith","Johnson","Park","Chen","Martinez","Thompson","Williams","Patel","Rivera","Brown","Kim","O'Brien","Wilson","Santos","Lee","Garcia","Nguyen","Singh","Miller","Davis"];
 const timeOptions = ["2 min ago","15 min ago","1 hour ago","3 hours ago","6 hours ago","12 hours ago","1 day ago","2 days ago","3 days ago"];
@@ -498,34 +660,45 @@ export function generateDemoListings(): Listing[] {
   const result: Listing[] = [];
   let id = 1000;
 
-  for (const city of cities) {
-    // Each city gets products from a random subset of categories
-    const rand = seededRandom(city.length * 31 + city.charCodeAt(0));
-    const categoryKeys = Object.keys(templates);
+  // Merge both template sets
+  const allTemplates: Record<string, ProductTemplate[]> = {};
+  for (const [cat, t] of Object.entries(templates)) {
+    allTemplates[cat] = [t];
+  }
+  for (const [cat, t] of Object.entries(cheapTemplates)) {
+    if (allTemplates[cat]) allTemplates[cat].push(t);
+    else allTemplates[cat] = [t];
+  }
 
-    // Pick ~8-12 categories per city
-    const numCategories = Math.floor(rand() * 5) + 8;
+  for (const city of cities) {
+    const rand = seededRandom(city.length * 31 + city.charCodeAt(0));
+    const categoryKeys = Object.keys(allTemplates);
+
+    // Pick ~10-16 categories per city (more coverage)
+    const numCategories = Math.floor(rand() * 7) + 10;
     const shuffled = [...categoryKeys].sort(() => rand() - 0.5);
-    const selectedCategories = shuffled.slice(0, numCategories);
+    const selectedCategories = shuffled.slice(0, Math.min(numCategories, categoryKeys.length));
 
     for (const cat of selectedCategories) {
-      const t = templates[cat];
-      // 2-4 products per category per city
-      const numProducts = Math.floor(rand() * 3) + 2;
+      const templateSets = allTemplates[cat];
 
-      for (let p = 0; p < numProducts && p < t.titles.length; p++) {
-        const titleIdx = Math.floor(rand() * t.titles.length);
-        const priceIdx = titleIdx % t.prices.length;
-        const imgIdx = titleIdx % t.images.length;
-        const condIdx = titleIdx % t.conditions.length;
-        const descIdx = titleIdx % t.descriptions.length;
-        const avatarIdx = (id + titleIdx) % avatars.length;
-        const fnIdx = (id * 3) % firstNames.length;
-        const lnIdx = (id * 7) % lastNames.length;
-        const timeIdx = (id * 2) % timeOptions.length;
+      for (const t of templateSets) {
+        // 2-4 products per template set per city
+        const numProducts = Math.floor(rand() * 3) + 2;
 
-        const price = t.prices[priceIdx];
-        const deposit = price > 0 ? Math.max(5, Math.round(price * 0.1)) : 0;
+        for (let p = 0; p < numProducts && p < t.titles.length; p++) {
+          const titleIdx = Math.floor(rand() * t.titles.length);
+          const priceIdx = titleIdx % t.prices.length;
+          const imgIdx = titleIdx % t.images.length;
+          const condIdx = titleIdx % t.conditions.length;
+          const descIdx = titleIdx % t.descriptions.length;
+          const avatarIdx = (id + titleIdx) % avatars.length;
+          const fnIdx = (id * 3) % firstNames.length;
+          const lnIdx = (id * 7) % lastNames.length;
+          const timeIdx = (id * 2) % timeOptions.length;
+
+          const price = t.prices[priceIdx];
+          const deposit = price > 0 ? Math.max(5, Math.round(price * 0.1)) : 0;
 
         result.push({
           id: `demo-${id}`,
@@ -555,7 +728,8 @@ export function generateDemoListings(): Listing[] {
           deliveryOptions: t.shippable ? ["pickup", "shipping"] : ["pickup"],
         });
 
-        id++;
+          id++;
+        }
       }
     }
   }

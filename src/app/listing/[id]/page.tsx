@@ -24,14 +24,18 @@ import {
   Loader2,
 } from "lucide-react";
 import { listings, getListingsBySeller, type Listing } from "@/lib/data";
+import { generateDemoListings } from "@/lib/demoProducts";
 import ListingCard from "@/components/ListingCard";
 import MessageModal from "@/components/MessageModal";
 import { supabase } from "@/lib/supabase";
+
+const generatedListings = generateDemoListings();
 
 export default function ListingDetail() {
   const { id } = useParams();
   const idStr = id as string;
   const isDbListing = idStr.startsWith("db-");
+  const isDemoListing = idStr.startsWith("demo-");
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [loadingDb, setLoadingDb] = useState(isDbListing);
@@ -44,7 +48,12 @@ export default function ListingDetail() {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<"pickup" | "shipping">("pickup");
 
-  // Load demo listing or DB listing
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [idStr]);
+
+  // Load listing from appropriate source
   useEffect(() => {
     if (isDbListing) {
       const dbId = idStr.replace("db-", "");
@@ -85,11 +94,14 @@ export default function ListingDetail() {
           }
           setLoadingDb(false);
         });
+    } else if (isDemoListing) {
+      const found = generatedListings.find((l) => l.id === idStr);
+      setListing(found || null);
     } else {
       const found = listings.find((l) => l.id === idStr);
       setListing(found || null);
     }
-  }, [idStr, isDbListing]);
+  }, [idStr, isDbListing, isDemoListing]);
 
   if (loadingDb) {
     return (
