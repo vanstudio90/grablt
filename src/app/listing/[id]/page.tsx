@@ -152,8 +152,38 @@ export default function ListingDetail() {
 
   const sellerListings = isDbListing ? [] : getListingsBySeller(listing.seller.id).filter((l) => l.id !== listing.id);
 
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: listing.title,
+    description: listing.description,
+    image: listing.images,
+    category: listing.category,
+    offers: {
+      "@type": "Offer",
+      url: `https://buyormeet.com/listing/${listing.id}`,
+      priceCurrency: "USD",
+      price: listing.price,
+      availability: listing.status === "available"
+        ? "https://schema.org/InStock"
+        : listing.status === "reserved"
+          ? "https://schema.org/LimitedAvailability"
+          : "https://schema.org/OutOfStock",
+      itemCondition: `https://schema.org/${listing.condition === "New" ? "NewCondition" : "UsedCondition"}`,
+      areaServed: listing.location,
+      seller: {
+        "@type": "Person",
+        name: listing.seller.name,
+      },
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
       <div className="max-w-6xl mx-auto px-4 py-4">
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary transition mb-4">
           <ArrowLeft className="w-4 h-4" /> Back to listings

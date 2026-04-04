@@ -8,18 +8,33 @@ import { MessageProvider } from "@/lib/MessageContext";
 import { AuthProvider } from "@/lib/AuthContext";
 
 export const metadata: Metadata = {
-  title: "BuyorMeet - Local Marketplace with Secure Meetups",
+  metadataBase: new URL("https://buyormeet.com"),
+  title: {
+    default: "BuyorMeet - Local Marketplace with Secure Meetups",
+    template: "%s | BuyorMeet",
+  },
   description: "Buy and sell locally with deposit protection. Meet safely, trade confidently.",
   manifest: "/manifest.json",
   robots: {
-    index: false,
-    follow: false,
-    nocache: true,
+    index: true,
+    follow: true,
     googleBot: {
-      index: false,
-      follow: false,
-      noimageindex: true,
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
     },
+  },
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "BuyorMeet",
+    url: "https://buyormeet.com",
+    title: "BuyorMeet - Local Marketplace with Secure Meetups",
+    description: "Buy and sell locally with deposit protection. Meet safely, trade confidently.",
   },
   appleWebApp: {
     capable: true,

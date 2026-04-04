@@ -1549,5 +1549,16 @@ export function generateDemoListings(): Listing[] {
     }
   }
 
-  return result;
+  // Dedupe: remove products with duplicate images (keep first occurrence)
+  // Also dedupe by (title + image) pair to remove exact duplicates
+  const seenImages = new Set<string>();
+  const deduped: Listing[] = [];
+  for (const l of result) {
+    const img = l.images[0];
+    if (!img || seenImages.has(img)) continue;
+    seenImages.add(img);
+    deduped.push(l);
+  }
+
+  return deduped;
 }
