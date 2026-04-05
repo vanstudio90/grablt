@@ -173,7 +173,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="border-t border-border py-1">
-                      <Link href="/profile" onClick={() => setShowAccountMenu(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition">
+                      <Link href="/settings" onClick={() => setShowAccountMenu(false)} className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition">
                         <Settings className="w-4 h-4 text-text-secondary" />
                         <span className="text-sm text-text-primary">Account Settings</span>
                       </Link>
@@ -261,7 +261,7 @@ export default function Navbar() {
                 <User className="w-5 h-5 text-text-secondary" />
                 <span>Profile</span>
               </Link>
-              <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+              <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
                 <Settings className="w-5 h-5 text-text-secondary" />
                 <span>Account Settings</span>
               </Link>

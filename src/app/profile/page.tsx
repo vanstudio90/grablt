@@ -44,7 +44,7 @@ export default function ProfilePage() {
                   <span className="text-text-tertiary">(15 reviews)</span>
                 </div>
               </div>
-              <Link href="/profile/settings" className="p-2 hover:bg-surface-hover rounded-full transition">
+              <Link href="/settings" className="p-2 hover:bg-surface-hover rounded-full transition">
                 <Settings className="w-5 h-5 text-text-secondary" />
               </Link>
             </div>
