@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { useLocation } from "@/lib/useLocation";
+import { menuItems, categoryItems } from "./Sidebar";
 
 export default function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -236,14 +237,7 @@ export default function Navbar() {
         >
             {/* Header */}
             <div className="flex items-center justify-between px-4 h-16 border-b border-border flex-shrink-0">
-              <Link href="/" onClick={() => setMobileMenu(false)} className="flex items-center gap-2">
-                <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
-                  <ShieldCheck className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold">
-                  <span className="text-primary">Buy</span><span className="text-text-primary">or</span><span className="text-primary">Meet</span>
-                </span>
-              </Link>
+              <h2 className="text-2xl font-bold text-text-primary">Marketplace</h2>
               <button
                 onClick={() => setMobileMenu(false)}
                 className="p-2 hover:bg-surface-hover rounded-full transition"
@@ -259,7 +253,7 @@ export default function Navbar() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
                   <input
                     type="text"
-                    placeholder={`Search in ${displayLocation}...`}
+                    placeholder="Search Marketplace"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 bg-surface-secondary border border-border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
@@ -292,76 +286,113 @@ export default function Navbar() {
                 </Link>
               )}
 
-              {/* Primary actions */}
-              <div className="py-2">
-                <Link href="/create" className="flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Plus className="w-5 h-5 text-primary" />
-                  </div>
-                  <span className="font-semibold text-base">Sell Something</span>
-                </Link>
-                <Link href="/buying" className="flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
-                  <div className="w-10 h-10 bg-surface-secondary rounded-full flex items-center justify-center">
-                    <ShoppingBag className="w-5 h-5 text-text-secondary" />
-                  </div>
-                  <span className="text-base">Buying</span>
-                </Link>
-                <Link href="/selling" className="flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
-                  <div className="w-10 h-10 bg-surface-secondary rounded-full flex items-center justify-center">
-                    <Tag className="w-5 h-5 text-text-secondary" />
-                  </div>
-                  <span className="text-base">Selling</span>
-                </Link>
-                <Link href="/cart" className="flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
-                  <div className="w-10 h-10 bg-surface-secondary rounded-full flex items-center justify-center">
-                    <ShoppingCart className="w-5 h-5 text-text-secondary" />
-                  </div>
-                  <span className="text-base">Cart</span>
-                </Link>
-                <Link href="/messages" className="flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
-                  <div className="w-10 h-10 bg-surface-secondary rounded-full flex items-center justify-center">
-                    <MessageCircle className="w-5 h-5 text-text-secondary" />
-                  </div>
-                  <span className="text-base">Messages</span>
+              {/* Marketplace menu (mirrors desktop Sidebar) */}
+              <nav className="px-2 py-2 space-y-0.5">
+                {menuItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={() => setMobileMenu(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition ${
+                        item.highlight
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-text-primary hover:bg-surface-hover"
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        item.highlight ? "bg-primary text-white" : "bg-surface-secondary"
+                      }`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-[15px] flex-1">{item.label}</span>
+                      {item.arrow && <ChevronRight className="w-5 h-5 text-text-tertiary" />}
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {/* Create new listing */}
+              <div className="px-4">
+                <Link
+                  href="/create"
+                  onClick={() => setMobileMenu(false)}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-primary/10 text-primary rounded-lg font-medium text-sm hover:bg-primary/15 transition"
+                >
+                  <Plus className="w-4 h-4" /> Create new listing
                 </Link>
               </div>
 
+              {/* Location */}
+              <div className="mx-4 mt-4 pt-4 border-t border-border">
+                <h3 className="text-sm font-semibold text-text-primary mb-1">Location</h3>
+                <button className="flex items-center gap-1 text-sm text-primary hover:underline">
+                  <MapPin className="w-4 h-4" /> {displayLocation} · Within {radius} mi
+                </button>
+              </div>
+
+              {/* Categories */}
+              <div className="mx-4 mt-4 pt-4 border-t border-border">
+                <h3 className="text-sm font-semibold text-text-primary mb-2">Categories</h3>
+                <nav className="space-y-0.5">
+                  {categoryItems.map((cat) => {
+                    const Icon = cat.icon;
+                    return (
+                      <button
+                        key={cat.label}
+                        onClick={() => {
+                          setMobileMenu(false);
+                          router.push(`/search?category=${encodeURIComponent(cat.label)}`);
+                        }}
+                        className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-text-primary hover:bg-surface-hover transition text-left"
+                      >
+                        <div className="w-9 h-9 rounded-full bg-surface-secondary flex items-center justify-center flex-shrink-0">
+                          <Icon className="w-4 h-4 text-text-secondary" />
+                        </div>
+                        <span className="text-[14px]">{cat.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
               {/* Account section */}
-              <div className="border-t border-border py-2">
+              <div className="mt-4 pt-2 border-t border-border px-2 py-2 pb-6">
                 {user ? (
                   <>
-                    <Link href="/settings" className="flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+                    <Link href="/settings" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
                       <div className="w-10 h-10 bg-surface-secondary rounded-full flex items-center justify-center">
                         <Settings className="w-5 h-5 text-text-secondary" />
                       </div>
-                      <span className="text-base">Account Settings</span>
+                      <span className="text-[15px]">Account Settings</span>
                     </Link>
-                    <Link href="/how-it-works" className="flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+                    <Link href="/how-it-works" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
                       <div className="w-10 h-10 bg-surface-secondary rounded-full flex items-center justify-center">
                         <HelpCircle className="w-5 h-5 text-text-secondary" />
                       </div>
-                      <span className="text-base">Help & Safety</span>
+                      <span className="text-[15px]">Help & Safety</span>
                     </Link>
-                    <button onClick={handleSignOut} className="flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition w-full text-left">
+                    <button onClick={handleSignOut} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition w-full text-left">
                       <div className="w-10 h-10 bg-danger/10 rounded-full flex items-center justify-center">
                         <LogOut className="w-5 h-5 text-danger" />
                       </div>
-                      <span className="text-base text-danger font-medium">Log Out</span>
+                      <span className="text-[15px] text-danger font-medium">Log Out</span>
                     </button>
                   </>
                 ) : (
                   <>
-                    <Link href="/login" className="flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+                    <Link href="/login" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                         <LogIn className="w-5 h-5 text-primary" />
                       </div>
-                      <span className="text-base text-primary font-medium">Log In</span>
+                      <span className="text-[15px] text-primary font-medium">Log In</span>
                     </Link>
-                    <Link href="/signup" className="flex items-center gap-4 px-4 py-3 hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
+                    <Link href="/signup" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-hover transition" onClick={() => setMobileMenu(false)}>
                       <div className="w-10 h-10 bg-surface-secondary rounded-full flex items-center justify-center">
                         <User className="w-5 h-5 text-text-secondary" />
                       </div>
-                      <span className="text-base">Sign Up</span>
+                      <span className="text-[15px]">Sign Up</span>
                     </Link>
                   </>
                 )}

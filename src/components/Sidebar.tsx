@@ -41,7 +41,7 @@ import {
 import { useState } from "react";
 import { useLocation } from "@/lib/useLocation";
 
-const menuItems = [
+export const menuItems = [
   { label: "Browse all", href: "/", icon: Globe, highlight: true },
   { label: "Notifications", href: "#", icon: Bell },
   { label: "Inbox", href: "/messages", icon: Inbox },
@@ -50,7 +50,7 @@ const menuItems = [
   { label: "Selling", href: "/selling", icon: Tag, arrow: true },
 ];
 
-const categoryItems = [
+export const categoryItems = [
   { label: "Vehicles", icon: Car },
   { label: "Property Rentals", icon: Building2 },
   { label: "Apparel", icon: Shirt },

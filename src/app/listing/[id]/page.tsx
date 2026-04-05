@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -56,6 +56,12 @@ export default function ListingDetail() {
   const { user } = useAuth();
   const router = useRouter();
 
+  // Swipe-down-to-dismiss (mobile): drag the page down and release to go back
+  const swipeContainerRef = useRef<HTMLDivElement>(null);
+  const [dragY, setDragY] = useState(0);
+  const [isDismissing, setIsDismissing] = useState(false);
+  const dragStateRef = useRef({ startY: 0, currentY: 0, dragging: false });
+
   const handleAskIfAvailable = async () => {
     if (!user) { router.push("/login"); return; }
     if (!listing) return;
@@ -82,6 +88,67 @@ export default function ListingDetail() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [idStr]);
+
+  // Swipe-down-to-dismiss — Facebook Marketplace style
+  useEffect(() => {
+    const el = swipeContainerRef.current;
+    if (!el) return;
+    const DISMISS_THRESHOLD = 120;
+    const state = dragStateRef.current;
+
+    const onTouchStart = (e: TouchEvent) => {
+      // Only start drag when page is scrolled to top
+      if (window.scrollY > 0) return;
+      // Don't start drag on interactive elements like carousels / buttons inside
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-no-swipe-dismiss]")) return;
+      state.startY = e.touches[0].clientY;
+      state.currentY = 0;
+      state.dragging = true;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!state.dragging) return;
+      const delta = e.touches[0].clientY - state.startY;
+      if (delta <= 0) {
+        // User started by swiping up — let the browser scroll normally
+        state.dragging = false;
+        state.currentY = 0;
+        setDragY(0);
+        return;
+      }
+      // User is dragging down from the top — take over and move the page
+      e.preventDefault();
+      state.currentY = delta;
+      setDragY(delta);
+    };
+
+    const onTouchEnd = () => {
+      if (!state.dragging) return;
+      const finalDrag = state.currentY;
+      state.dragging = false;
+      state.currentY = 0;
+      if (finalDrag > DISMISS_THRESHOLD) {
+        // Animate the page off-screen then go back
+        setIsDismissing(true);
+        setDragY(window.innerHeight);
+        setTimeout(() => router.back(), 260);
+      } else {
+        setDragY(0);
+      }
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchEnd);
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [router]);
 
   // Load listing from appropriate source
   useEffect(() => {
@@ -184,7 +251,27 @@ export default function ListingDetail() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
-      <div className="max-w-6xl mx-auto px-4 py-4">
+      {/* Backdrop that fades in as user drags down (mobile) */}
+      <div
+        className="md:hidden fixed inset-0 bg-black pointer-events-none z-0"
+        style={{
+          opacity: Math.min(0.4, dragY / 800),
+          transition: isDismissing || dragY === 0 ? "opacity 260ms ease-out" : "none",
+        }}
+      />
+      <div
+        ref={swipeContainerRef}
+        className="relative max-w-6xl mx-auto px-4 py-4 touch-pan-y"
+        style={{
+          transform: `translateY(${dragY}px)`,
+          transition: dragY === 0 || isDismissing ? "transform 260ms ease-out" : "none",
+          willChange: "transform",
+        }}
+      >
+        {/* Drag handle — visual hint on mobile */}
+        <div className="md:hidden flex justify-center -mt-2 mb-2">
+          <div className="w-10 h-1 bg-border rounded-full" />
+        </div>
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary transition mb-4">
           <ArrowLeft className="w-4 h-4" /> Back to listings
         </Link>
