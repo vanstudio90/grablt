@@ -89,36 +89,57 @@ export default function ListingDetail() {
     window.scrollTo(0, 0);
   }, [idStr]);
 
-  // Swipe-down-to-dismiss — Facebook Marketplace style
+  // Swipe-down-to-dismiss — attached to document so it works independent
+  // of when the listing container mounts (loading state, etc.)
   useEffect(() => {
-    const el = swipeContainerRef.current;
-    if (!el) return;
-    const DISMISS_THRESHOLD = 120;
+    const DISMISS_THRESHOLD = 100;
     const state = dragStateRef.current;
+    state.startY = 0;
+    state.currentY = 0;
+    state.dragging = false;
+    let decided = false; // have we decided whether to hijack this gesture?
+
+    const isInsideModal = (target: EventTarget | null) => {
+      const el = target as HTMLElement | null;
+      if (!el) return false;
+      return !!el.closest("[data-no-swipe-dismiss]");
+    };
 
     const onTouchStart = (e: TouchEvent) => {
-      // Only start drag when page is scrolled to top
+      if (e.touches.length > 1) return; // ignore pinch
+      if (isInsideModal(e.target)) return;
+      // Only arm the gesture when the page is already scrolled to the top
       if (window.scrollY > 0) return;
-      // Don't start drag on interactive elements like carousels / buttons inside
-      const target = e.target as HTMLElement;
-      if (target.closest("[data-no-swipe-dismiss]")) return;
       state.startY = e.touches[0].clientY;
       state.currentY = 0;
       state.dragging = true;
+      decided = false;
     };
 
     const onTouchMove = (e: TouchEvent) => {
       if (!state.dragging) return;
       const delta = e.touches[0].clientY - state.startY;
+
+      // First meaningful movement decides direction
+      if (!decided) {
+        if (Math.abs(delta) < 3) return; // wait for clearer intent
+        if (delta < 0) {
+          // User swiped up first — release the gesture, let browser scroll
+          state.dragging = false;
+          return;
+        }
+        decided = true;
+      }
+
       if (delta <= 0) {
-        // User started by swiping up — let the browser scroll normally
-        state.dragging = false;
+        // Pulled back above start — reset
         state.currentY = 0;
         setDragY(0);
         return;
       }
-      // User is dragging down from the top — take over and move the page
-      e.preventDefault();
+
+      // Downward drag from the top of the page — take over
+      if (e.cancelable) e.preventDefault();
       state.currentY = delta;
       setDragY(delta);
     };
@@ -128,8 +149,8 @@ export default function ListingDetail() {
       const finalDrag = state.currentY;
       state.dragging = false;
       state.currentY = 0;
+      decided = false;
       if (finalDrag > DISMISS_THRESHOLD) {
-        // Animate the page off-screen then go back
         setIsDismissing(true);
         setDragY(window.innerHeight);
         setTimeout(() => router.back(), 260);
@@ -138,15 +159,21 @@ export default function ListingDetail() {
       }
     };
 
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    el.addEventListener("touchend", onTouchEnd);
-    el.addEventListener("touchcancel", onTouchEnd);
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
+    document.addEventListener("touchend", onTouchEnd);
+    document.addEventListener("touchcancel", onTouchEnd);
+
+    // Suppress iOS rubber-band / pull-to-refresh while viewing the listing
+    const prevOverscroll = document.documentElement.style.overscrollBehaviorY;
+    document.documentElement.style.overscrollBehaviorY = "contain";
+
     return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("touchend", onTouchEnd);
-      el.removeEventListener("touchcancel", onTouchEnd);
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", onTouchEnd);
+      document.removeEventListener("touchcancel", onTouchEnd);
+      document.documentElement.style.overscrollBehaviorY = prevOverscroll;
     };
   }, [router]);
 
@@ -587,7 +614,7 @@ export default function ListingDetail() {
 
       {/* Deposit Modal */}
       {showDepositModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4">
+        <div data-no-swipe-dismiss className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4">
           <div className="bg-surface rounded-t-3xl md:rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-5">

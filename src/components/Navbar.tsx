@@ -64,7 +64,7 @@ export default function Navbar() {
   const avatarUrl = user?.user_metadata?.avatar_url;
 
   return (
-    <header className="sticky top-0 z-50 bg-surface border-b border-border">
+    <header data-no-swipe-dismiss className="sticky top-0 z-50 bg-surface border-b border-border">
       <div className="px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}

@@ -72,7 +72,7 @@ export default function MessageModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-4 pb-20 md:pb-4">
+    <div data-no-swipe-dismiss className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-4 pb-20 md:pb-4">
       <div className="bg-surface rounded-t-3xl md:rounded-2xl w-full max-w-md shadow-xl max-h-[85vh] overflow-y-auto">
         {!user ? (
           <div className="p-6 text-center">
