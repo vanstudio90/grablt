@@ -51,7 +51,13 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+  modal,
+}: {
+  children: React.ReactNode;
+  modal: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <head>
@@ -62,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <MessageProvider>
             <Navbar />
             <LayoutShell>{children}</LayoutShell>
+            {modal}
             <BottomNav />
             <PWAInstall />
           </MessageProvider>
