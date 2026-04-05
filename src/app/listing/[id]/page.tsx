@@ -23,6 +23,7 @@ import {
   Truck,
   Loader2,
   Send,
+  X,
 } from "lucide-react";
 import { listings, getListingsBySeller, type Listing } from "@/lib/data";
 import { generateDemoListings } from "@/lib/demoProducts";
@@ -288,7 +289,7 @@ export default function ListingDetail() {
       />
       <div
         ref={swipeContainerRef}
-        className="relative max-w-6xl mx-auto px-4 py-4 touch-pan-y"
+        className="relative max-w-6xl mx-auto px-4 pt-3 pb-4 md:py-4 touch-pan-y bg-surface-secondary md:bg-transparent min-h-screen md:min-h-0"
         style={{
           transform: `translateY(${dragY}px)`,
           transition: dragY === 0 || isDismissing ? "transform 260ms ease-out" : "none",
@@ -296,10 +297,18 @@ export default function ListingDetail() {
         }}
       >
         {/* Drag handle — visual hint on mobile */}
-        <div className="md:hidden flex justify-center -mt-2 mb-2">
+        <div className="md:hidden flex justify-center mb-3">
           <div className="w-10 h-1 bg-border rounded-full" />
         </div>
-        <Link href="/" className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary transition mb-4">
+        {/* Mobile close button (Facebook-style) — navbar is hidden on listing pages */}
+        <button
+          onClick={() => router.back()}
+          className="md:hidden absolute top-3 left-3 w-9 h-9 bg-white/95 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-white transition z-10"
+          aria-label="Close"
+        >
+          <X className="w-5 h-5 text-text-primary" />
+        </button>
+        <Link href="/" className="hidden md:inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary transition mb-4">
           <ArrowLeft className="w-4 h-4" /> Back to listings
         </Link>
 

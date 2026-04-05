@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   Search,
@@ -31,9 +31,14 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const accountRef = useRef<HTMLDivElement>(null);
   const { user, loading, signOut } = useAuth();
   const { displayLocation, radius } = useLocation();
+
+  // On listing detail pages, hide the navbar on mobile so the page feels like
+  // a Facebook-style fullscreen modal that can be swiped down to dismiss.
+  const hideOnMobile = pathname.startsWith("/listing/");
 
   // Close account menu on outside click
   useEffect(() => {
@@ -64,11 +69,23 @@ export default function Navbar() {
   const avatarUrl = user?.user_metadata?.avatar_url;
 
   return (
-    <header data-no-swipe-dismiss className="sticky top-0 z-50 bg-surface border-b border-border">
+    <header
+      data-no-swipe-dismiss
+      className={`sticky top-0 z-50 bg-surface border-b border-border ${hideOnMobile ? "hidden md:block" : ""}`}
+    >
       <div className="px-4">
         <div className="flex items-center justify-between h-16">
+          {/* Mobile hamburger — leftmost, Facebook Marketplace style */}
+          <button
+            className="md:hidden -ml-2 mr-1 p-2 hover:bg-surface-hover rounded-full transition"
+            onClick={() => setMobileMenu(!mobileMenu)}
+            aria-label="Open menu"
+          >
+            <Menu className="w-6 h-6 text-text-primary" />
+          </button>
+
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 mr-auto md:mr-0">
             <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
@@ -196,10 +213,17 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <button className="md:hidden p-2 hover:bg-surface-hover rounded-full transition" onClick={() => setMobileMenu(!mobileMenu)}>
-            {mobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          {/* Mobile right-side actions — Messages + Cart */}
+          <div className="md:hidden flex items-center gap-1">
+            <Link href="/messages" className="relative p-2 hover:bg-surface-hover rounded-full transition" aria-label="Messages">
+              <MessageCircle className="w-5 h-5 text-text-secondary" />
+              <span className="absolute top-1 right-1 w-4 h-4 bg-danger text-white text-[10px] font-bold flex items-center justify-center rounded-full">2</span>
+            </Link>
+            <Link href="/cart" className="relative p-2 hover:bg-surface-hover rounded-full transition" aria-label="Cart">
+              <ShoppingCart className="w-5 h-5 text-text-secondary" />
+              <span className="absolute top-1 right-1 w-4 h-4 bg-primary text-white text-[10px] font-bold flex items-center justify-center rounded-full">2</span>
+            </Link>
+          </div>
         </div>
 
         {/* Mobile Search */}
