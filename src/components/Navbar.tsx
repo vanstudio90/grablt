@@ -217,15 +217,23 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Side Drawer */}
-      {mobileMenu && (
-        <div className="md:hidden fixed inset-0 z-[60]">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setMobileMenu(false)}
-          />
-          {/* Drawer */}
-          <div className="absolute left-0 top-0 bottom-0 w-[85%] max-w-sm bg-surface shadow-2xl flex flex-col animate-in slide-in-from-left duration-200">
+      <div
+        className={`md:hidden fixed inset-0 z-[60] ${mobileMenu ? "pointer-events-auto" : "pointer-events-none"}`}
+        aria-hidden={!mobileMenu}
+      >
+        {/* Backdrop */}
+        <div
+          onClick={() => setMobileMenu(false)}
+          className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-out ${
+            mobileMenu ? "opacity-100" : "opacity-0"
+          }`}
+        />
+        {/* Drawer */}
+        <div
+          className={`absolute left-0 top-0 bottom-0 w-[85%] max-w-sm bg-surface shadow-2xl flex flex-col transform transition-transform duration-300 ease-out will-change-transform ${
+            mobileMenu ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
             {/* Header */}
             <div className="flex items-center justify-between px-4 h-16 border-b border-border flex-shrink-0">
               <Link href="/" onClick={() => setMobileMenu(false)} className="flex items-center gap-2">
@@ -360,8 +368,7 @@ export default function Navbar() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+      </div>
     </header>
   );
 }
